@@ -30,14 +30,13 @@ def _comm_response_received():
 
 def _wait_for_comm_response(timeout=1):
     # Heavily inspired by implementation of CaptureExecution in the
+    if _dash_comm.kernel is None:
+        # Not in jupyter server setting
+        return
 
     # Get shell and kernel
     shell = IPython.get_ipython()
     kernel = shell.kernel
-
-    if kernel is None:
-        # Not in jupyter server setting
-        return
 
     # Start capturing shell events to replay later
     captured_events = []

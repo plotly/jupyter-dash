@@ -1,8 +1,7 @@
-import ipython_blocking
 import IPython
 from ipykernel.comm import Comm
 import time
-
+import sys
 
 _jupyter_config = {}
 
@@ -30,17 +29,51 @@ def _comm_response_received():
 
 
 def _wait_for_comm_response(timeout=1):
-    if _dash_comm.kernel is None:
+    # Heavily inspired by implementation of CaptureExecution in the
+
+    # Get shell and kernel
+    shell = IPython.get_ipython()
+    kernel = shell.kernel
+
+    if kernel is None:
         # Not in jupyter server setting
         return
 
+    # Start capturing shell events to replay later
+    captured_events = []
+
+    def capture_event(stream, ident, parent):
+        captured_events.append((stream, ident, parent))
+
+    kernel.shell_handlers['execute_request'] = capture_event
+
+    # increment execution count to avoid collision error
+    shell.execution_count += 1
+
+    # Allow kernel to execute comms until we receive the jupyter configuration comm
+    # response
     t0 = time.time()
-    ctx = ipython_blocking.CaptureExecution(replay=True)
-    with ctx:
-        while True:
-            if (time.time() - t0) > timeout:
-                # give up
-                break
-            if _comm_response_received():
-                break
-            ctx.step()
+    while True:
+        if (time.time() - t0) > timeout:
+            # give up
+            break
+        if _comm_response_received():
+            break
+
+        kernel.do_one_iteration()
+
+    # Stop capturing events, revert the kernel shell handler to the default
+    # execute_request behavior
+    kernel.shell_handlers['execute_request'] = kernel.execute_request
+
+    # Replay captured events
+    # need to flush before replaying so messages show up in current cell not
+    # replay cells
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    for stream, ident, parent in captured_events:
+        # Using kernel.set_parent is the key to getting the output of the replayed
+        # events to show up in the cells that were captured instead of the current cell
+        kernel.set_parent(ident, parent)
+        kernel.execute_request(stream, ident, parent)

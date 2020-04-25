@@ -6,36 +6,40 @@ import flask.cli
 from threading import Thread
 from retrying import retry
 
-import IPython
-from IPython.display import HTML, IFrame, display
-from ipykernel.comm import Comm
+
+from IPython.display import IFrame, display
+from .comms import _dash_comm, _jupyter_config, _wait_for_comm_response
+
 
 class JupyterDash(dash.Dash):
-    _dash_comm = Comm(target_name='dash_viewer')
-    _jupyterlab_base_url = None
 
-    def __init__(self, base_url=None, **kwargs):
-        # Infer requests_pathname_prefix
+    @classmethod
+    def infer_jupyter_config(cls):
+        _wait_for_comm_response()
+
+    def __init__(self, server_url=None, **kwargs):
         requests_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
         if requests_pathname_prefix is None:
-            if JupyterDash._jupyterlab_base_url:
-                # We're in a JupyterLab context and jupyter_server_proxy is installed
-                kwargs['requests_pathname_prefix'] = '/proxy/{port}/'
-
+            if _jupyter_config.get('base_subpath', None):
+                # We're in a Jupyter notebook/lab context, and jupyter_server_proxy is
+                # installed
+                kwargs['requests_pathname_prefix'] = (
+                        _jupyter_config.get('base_subpath', None).rstrip('/') +
+                        '/proxy/{port}/'
+                )
         # Call superclass constructor
         super(JupyterDash, self).__init__(**kwargs)
 
         # Infer base_url
-        if base_url is None:
+        if server_url is None:
             domain_base = os.environ.get('PLOTLY_DASH_DOMAIN_BASE', None)
-            if JupyterDash._jupyterlab_base_url:
-                # JupyterLab extension reported base url
-                base_url = JupyterDash._jupyterlab_base_url
+            if _jupyter_config.get('server_url', None):
+                server_url = _jupyter_config.get('server_url', None)
             elif domain_base:
                 # Dash Enterprise set PLOTLY_DASH_DOMAIN_BASE environment variable
-                base_url = 'https://' + domain_base
+                server_url = 'https://' + domain_base
 
-        self.base_url = base_url
+        self.base_url = server_url
 
         # Register route to shut down server
         @self.server.route('/_shutdown', methods=['GET'])
@@ -65,7 +69,7 @@ class JupyterDash(dash.Dash):
 
         if mode is None:
             # Infer default display argument
-            if JupyterDash._jupyterlab_base_url:
+            if _jupyter_config.get('frontend', None) == "jupyterlab":
                 # There is an active JupyterLab extension
                 mode = "jupyterlab"
             else:
@@ -166,7 +170,7 @@ class JupyterDash(dash.Dash):
                 dashboard_url=dashboard_url
             ))
         elif mode == 'jupyterlab':
-            if not self._jupyterlab_base_url:
+            if _jupyter_config.get("frontend") != "jupyterlab":
                 raise IOError("""
 Unable to communicate with the jupyterlab-dash JupyterLab extension.
 Is this Python kernel running inside JupyterLab with the jupyterlab-dash
@@ -177,7 +181,7 @@ You can install the extension with:
 $ jupyter labextension install jupyterlab-dash
 """)
             # Update front-end extension
-            self._dash_comm.send({
+            _dash_comm.send({
                 'type': 'show',
                 'port': port
             })
@@ -191,22 +195,3 @@ $ jupyter labextension install jupyterlab-dash
             response = requests.get(shutdown_url)
         except Exception as e:
             pass
-
-
-# Register handler to process events sent from the
-# front-end JupyterLab extension to the python kernel
-@JupyterDash._dash_comm.on_msg
-def _receive_message(msg):
-    msg_data = msg.get('content').get('data')
-    msg_type = msg_data.get('type', None)
-    if msg_type == 'base_url_response':
-        JupyterDash._jupyterlab_base_url = msg_data['base_url']
-
-
-# If running in an ipython kernel,
-# request that the front end extension send us the notebook server base URL
-if IPython.get_ipython() is not None:
-    if JupyterDash._dash_comm.kernel is not None:
-        JupyterDash._dash_comm.send({
-            'type': 'base_url_request'
-        })

@@ -105,7 +105,7 @@ function registerCommTarget(
   app: JupyterFrontEnd
 ) {
   kernel.registerCommTarget(
-    'dash_viewer',
+    'jupyter_dash',
     (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => {
       comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
         let msgData = (msg.content.data as unknown) as DashMessageData;
@@ -135,8 +135,18 @@ function registerCommTarget(
           // Activate the widget
           app.shell.activateById(widget.id);
         } else if (msgData.type === 'base_url_request') {
+
+          // Build server url and base subpath.
           const baseUrl = PageConfig.getBaseUrl();
-          comm.send({ type: 'base_url_response', base_url: baseUrl });
+          const baseSubpath = PageConfig.getOption('baseUrl');
+          const n = baseUrl.search(baseSubpath)
+          const serverUrl = baseUrl.slice(0, n)
+          comm.send({
+            type: 'base_url_response',
+            server_url: serverUrl,
+            base_subpath: baseSubpath,
+            frontend: "jupyterlab",
+          });
         }
       };
     }

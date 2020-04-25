@@ -95,7 +95,7 @@ function registerCommTarget(kernel, widgets, app) {
                 // Build server url and base subpath.
                 const baseUrl = coreutils_1.PageConfig.getBaseUrl();
                 const baseSubpath = coreutils_1.PageConfig.getOption('baseUrl');
-                const n = baseUrl.search(baseSubpath);
+                const n = baseUrl.lastIndexOf(baseSubpath);
                 const serverUrl = baseUrl.slice(0, n);
                 comm.send({
                     type: 'base_url_response',

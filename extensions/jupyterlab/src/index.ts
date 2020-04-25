@@ -139,7 +139,7 @@ function registerCommTarget(
           // Build server url and base subpath.
           const baseUrl = PageConfig.getBaseUrl();
           const baseSubpath = PageConfig.getOption('baseUrl');
-          const n = baseUrl.search(baseSubpath)
+          const n = baseUrl.lastIndexOf(baseSubpath)
           const serverUrl = baseUrl.slice(0, n)
           comm.send({
             type: 'base_url_response',

@@ -36,9 +36,6 @@ class DashIFrameWidget extends widgets_1.Widget {
         this.iframe.src += '';
     }
 }
-/**
- * Activate the xckd widget extension.
- */
 function activate(app, restorer, notebooks, consoles) {
     // Declare a widget variable
     let widgets = new Map();

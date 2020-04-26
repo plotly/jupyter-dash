@@ -64,9 +64,6 @@ interface DashMessageData {
   port: string;
 }
 
-/**
- * Activate the xckd widget extension.
- */
 function activate(
   app: JupyterFrontEnd,
   restorer: ILayoutRestorer,

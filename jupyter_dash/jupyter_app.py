@@ -12,34 +12,44 @@ from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
 class JupyterDash(dash.Dash):
-
     @classmethod
     def infer_jupyter_config(cls):
         _request_jupyter_config()
 
     def __init__(self, server_url=None, **kwargs):
-        requests_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
-        if requests_pathname_prefix is None:
-            if _jupyter_config.get('base_subpath', None):
-                # We're in a Jupyter notebook/lab context, and jupyter_server_proxy is
-                # installed
-                kwargs['requests_pathname_prefix'] = (
-                        _jupyter_config.get('base_subpath', None).rstrip('/') +
-                        '/proxy/{port}/'
-                )
+
+        # Gather default jupyter properties
+        self.default_server_url = None
+        self.default_requests_pathname_prefix = None
+        self.default_mode = 'external'
+
+        if 'base_subpath' in _jupyter_config:
+            self.default_requests_pathname_prefix = (
+                _jupyter_config['base_subpath'].rstrip('/') + '/proxy/{port}/'
+            )
+
+        if 'server_url' in _jupyter_config:
+            self.default_server_url = _jupyter_config['server_url']
+
+        if 'frontend' in _jupyter_config:
+            if _jupyter_config['frontend'] == 'jupyterlab':
+                self.default_mode = 'jupyterlab'
+            else:
+                self.default_mode = 'external'
+
+        self._input_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
+
         # Call superclass constructor
         super(JupyterDash, self).__init__(**kwargs)
 
-        # Infer base_url
+        # Infer server_url
         if server_url is None:
             domain_base = os.environ.get('PLOTLY_DASH_DOMAIN_BASE', None)
-            if _jupyter_config.get('server_url', None):
-                server_url = _jupyter_config.get('server_url', None)
-            elif domain_base:
+            if domain_base:
                 # Dash Enterprise set PLOTLY_DASH_DOMAIN_BASE environment variable
                 server_url = 'https://' + domain_base
 
-        self.base_url = server_url
+        self.server_url = server_url
 
         # Register route to shut down server
         @self.server.route('/_shutdown', methods=['GET'])
@@ -64,19 +74,14 @@ class JupyterDash(dash.Dash):
             port=os.getenv("PORT", "8050"),
             **kwargs
     ):
-        # Validate / infer display
+        # Validate / infer display mode
         valid_display_values = ["jupyterlab", "inline", "external"]
 
         if mode is None:
-            # Infer default display argument
-            if _jupyter_config.get('frontend', None) == "jupyterlab":
-                # There is an active JupyterLab extension
-                mode = "jupyterlab"
-            else:
-                mode = "external"
+            mode = self.default_mode
         elif not isinstance(mode, str):
             raise ValueError(
-                "The display argument must be a string\n"
+                "The mode argument must be a string\n"
                 "    Received value of type {typ}: {val}".format(
                     typ=type(mode), val=repr(mode)
                 )
@@ -97,22 +102,28 @@ class JupyterDash(dash.Dash):
         # Run superclass run_server is separate thread
         super_run_server = super(JupyterDash, self).run_server
 
-        # Configure urls
+        # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)
+        if self._input_pathname_prefix is None:
+            requests_pathname_prefix = self.default_requests_pathname_prefix
+
         if requests_pathname_prefix is not None:
             requests_pathname_prefix = requests_pathname_prefix.format(port=port)
-            self.config.update({'requests_pathname_prefix': requests_pathname_prefix})
         else:
             requests_pathname_prefix = '/'
+        self.config.update({'requests_pathname_prefix': requests_pathname_prefix})
 
-        # Compute base url
-        if self.base_url is None:
-            base = f'http://{host}:{port}'
+        # Compute server_url url
+        if self.server_url is None:
+            if self.default_server_url:
+                server_url = self.default_server_url.rstrip('/')
+            else:
+                server_url = f'http://{host}:{port}'
         else:
-            base = self.base_url.rstrip('/')
+            server_url = self.server_url.rstrip('/')
 
-        dashboard_url = "{base}{requests_pathname_prefix}".format(
-            base=base, requests_pathname_prefix=requests_pathname_prefix
+        dashboard_url = "{server_url}{requests_pathname_prefix}".format(
+            server_url=server_url, requests_pathname_prefix=requests_pathname_prefix
         )
 
         # Enable supported dev tools by default

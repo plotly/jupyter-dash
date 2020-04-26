@@ -8,14 +8,14 @@ from retrying import retry
 
 
 from IPython.display import IFrame, display
-from .comms import _dash_comm, _jupyter_config, _wait_for_comm_response
+from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
 class JupyterDash(dash.Dash):
 
     @classmethod
     def infer_jupyter_config(cls):
-        _wait_for_comm_response()
+        _request_jupyter_config()
 
     def __init__(self, server_url=None, **kwargs):
         requests_pathname_prefix = kwargs.get('requests_pathname_prefix', None)

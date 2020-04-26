@@ -118,7 +118,6 @@ class JupyterDash(dash.Dash):
         # Enable supported dev tools by default
         for k in [
             'dev_tools_silence_routes_logging',
-            'dev_tools_hot_reload',
             # 'dev_tools_ui',  # Stack traces don't work yet
             'dev_tools_props_check',
             'dev_tools_serve_dev_bundles',
@@ -126,6 +125,12 @@ class JupyterDash(dash.Dash):
         ]:
             if k not in kwargs:
                 kwargs[k] = True
+
+        if 'dev_tools_hot_reload' not in kwargs:
+            # Enable hot-reload by default in "external" mode. Enabling in inline or
+            # in JupyterLab extension seems to cause Jupyter problems sometimes when
+            # there is no active kernel.
+            kwargs['dev_tools_hot_reload'] = mode == "external"
 
         # Disable debug because it doesn't work in notebook
         kwargs['debug'] = False

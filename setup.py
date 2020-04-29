@@ -11,7 +11,7 @@ setup(
     data_files=[
         # like `jupyter nbextension install --sys-prefix`
         ("share/jupyter/nbextensions/jupyter_dash", [
-            "jupyter_dash/nbextension/static/main.js",
+            "jupyter_dash/nbextension/main.js",
         ]),
          # like `jupyter nbextension enable --sys-prefix`
         ("etc/jupyter/nbconfig/notebook.d", [

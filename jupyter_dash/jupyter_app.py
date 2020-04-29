@@ -8,20 +8,13 @@ from retrying import retry
 
 
 from IPython.display import IFrame, display
-from .comms import _dash_comm, _jupyter_config, _request_jupyter_proxy_config
+from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
 class JupyterDash(dash.Dash):
     @classmethod
-    def infer_jupyter_proxy_config(cls):
-        try:
-            import jupyter_server_proxy
-        except Exception:
-            raise ImportError(
-                "The infer_jupyter_proxy_config function requires the "
-                "jupyter_server_proxy Python package"
-            )
-        _request_jupyter_proxy_config()
+    def infer_jupyter_config(cls):
+        _request_jupyter_config()
 
     def __init__(self, server_url=None, **kwargs):
 
@@ -30,12 +23,19 @@ class JupyterDash(dash.Dash):
         self.default_requests_pathname_prefix = None
         self.default_mode = 'external'
 
-        if 'base_subpath' in _jupyter_config:
+        # See if jupyter_server_proxy is installed
+        try:
+            import jupyter_server_proxy
+            self._server_proxy = True
+        except Exception:
+            self._server_proxy = False
+
+        if 'base_subpath' in _jupyter_config and self._server_proxy:
             self.default_requests_pathname_prefix = (
                 _jupyter_config['base_subpath'].rstrip('/') + '/proxy/{port}/'
             )
 
-        if 'server_url' in _jupyter_config:
+        if 'server_url' in _jupyter_config and self._server_proxy:
             self.default_server_url = _jupyter_config['server_url']
 
         if 'frontend' in _jupyter_config:
@@ -206,7 +206,8 @@ $ jupyter labextension install jupyterlab-dash
             # Update front-end extension
             _dash_comm.send({
                 'type': 'show',
-                'port': port
+                'port': port,
+                'url': dashboard_url,
             })
 
     @classmethod

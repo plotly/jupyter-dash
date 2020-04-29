@@ -11,3 +11,6 @@ def _jupyter_nbextension_paths():
             "require": "jupyter_dash/main",
         }
     ]
+
+
+__labextension_version__ = "v0.2.0-alpha.2"

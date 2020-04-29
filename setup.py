@@ -1,5 +1,7 @@
 from setuptools import setup
 
+from jupyter_dash import __labextension_version__
+
 setup(
     name='jupyter-dash',
     version='0.0.1a1',
@@ -13,9 +15,15 @@ setup(
         ("share/jupyter/nbextensions/jupyter_dash", [
             "jupyter_dash/nbextension/main.js",
         ]),
-         # like `jupyter nbextension enable --sys-prefix`
+        # like `jupyter nbextension enable --sys-prefix`
         ("etc/jupyter/nbconfig/notebook.d", [
             "jupyter_dash/nbextension/jupyter_dash.json"
+        ]),
+        # Place jupyterlab extension in extension directory
+        ("share/jupyter/lab/extensions", [
+            "extensions/jupyterlab/jupyterlab-dash-{ver}.tgz".format(
+                ver=__labextension_version__
+            )
         ]),
     ]
 )

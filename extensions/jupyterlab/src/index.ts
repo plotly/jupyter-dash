@@ -22,7 +22,7 @@ class DashIFrameWidget extends Widget {
   /**
    * Construct a new DashIFrameWidget.
    */
-  constructor(port: string) {
+  constructor(port: string, url: string) {
     super();
 
     this.id = port;
@@ -35,8 +35,7 @@ class DashIFrameWidget extends Widget {
     // See https://github.com/jupyterlab/jupyterlab/blob/master/packages/apputils/style/iframe.css#L17-L35
     this.addClass('jp-IFrame');
 
-    const baseUrl = PageConfig.getBaseUrl();
-    const serviceUrl = `${baseUrl}proxy/${port}`;
+    const serviceUrl = url;
     const iframeElement = document.createElement('iframe');
     iframeElement.setAttribute('baseURI', serviceUrl);
     this.iframe = iframeElement;
@@ -62,6 +61,7 @@ class DashIFrameWidget extends Widget {
 interface DashMessageData {
   type: string;
   port: string;
+  url: string;
 }
 
 function activate(
@@ -110,7 +110,7 @@ function registerCommTarget(
           let widget: DashIFrameWidget;
           if (!widgets.has(msgData.port)) {
             // Create a new widget
-            widget = new DashIFrameWidget(msgData.port);
+            widget = new DashIFrameWidget(msgData.port, msgData.url);
             widget.update();
             widgets.set(msgData.port, widget);
 

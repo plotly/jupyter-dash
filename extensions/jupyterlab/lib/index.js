@@ -10,7 +10,7 @@ class DashIFrameWidget extends widgets_1.Widget {
     /**
      * Construct a new DashIFrameWidget.
      */
-    constructor(port) {
+    constructor(port, url) {
         super();
         this.id = port;
         this.title.label = `Dash (port: ${port})`;
@@ -20,8 +20,7 @@ class DashIFrameWidget extends widgets_1.Widget {
         // See https://github.com/phosphorjs/phosphor/issues/305
         // See https://github.com/jupyterlab/jupyterlab/blob/master/packages/apputils/style/iframe.css#L17-L35
         this.addClass('jp-IFrame');
-        const baseUrl = coreutils_1.PageConfig.getBaseUrl();
-        const serviceUrl = `${baseUrl}proxy/${port}`;
+        const serviceUrl = url;
         const iframeElement = document.createElement('iframe');
         iframeElement.setAttribute('baseURI', serviceUrl);
         this.iframe = iframeElement;
@@ -67,7 +66,7 @@ function registerCommTarget(kernel, widgets, app) {
                 let widget;
                 if (!widgets.has(msgData.port)) {
                     // Create a new widget
-                    widget = new DashIFrameWidget(msgData.port);
+                    widget = new DashIFrameWidget(msgData.port, msgData.url);
                     widget.update();
                     widgets.set(msgData.port, widget);
                     // Add instance tracker stuff

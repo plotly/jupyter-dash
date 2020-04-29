@@ -18,7 +18,7 @@ class JupyterDash(dash.Dash):
             import jupyter_server_proxy
         except Exception:
             raise ImportError(
-                "The infer_jupyter_proxy_config function requires the"
+                "The infer_jupyter_proxy_config function requires the "
                 "jupyter_server_proxy Python package"
             )
         _request_jupyter_proxy_config()

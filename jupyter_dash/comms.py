@@ -30,7 +30,7 @@ def _jupyter_comm_response_received():
     return bool(_jupyter_config)
 
 
-def _request_jupyter_config(timeout=1):
+def _request_jupyter_proxy_config(timeout=2):
     # Heavily inspired by implementation of CaptureExecution in the
     if _dash_comm.kernel is None:
         # Not in jupyter server setting
@@ -59,7 +59,10 @@ def _request_jupyter_config(timeout=1):
     while True:
         if (time.time() - t0) > timeout:
             # give up
-            break
+            raise EnvironmentError(
+                "Unable to communicate with the jupyter_dash notebook or JupyterLab \n"
+                "extension required to infer proxy configuration."
+            )
         if _jupyter_comm_response_received():
             break
 

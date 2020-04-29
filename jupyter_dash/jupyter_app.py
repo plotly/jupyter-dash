@@ -8,13 +8,20 @@ from retrying import retry
 
 
 from IPython.display import IFrame, display
-from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
+from .comms import _dash_comm, _jupyter_config, _request_jupyter_proxy_config
 
 
 class JupyterDash(dash.Dash):
     @classmethod
-    def infer_jupyter_config(cls):
-        _request_jupyter_config()
+    def infer_jupyter_proxy_config(cls):
+        try:
+            import jupyter_server_proxy
+        except Exception:
+            raise ImportError(
+                "The infer_jupyter_proxy_config function requires the"
+                "jupyter_server_proxy Python package"
+            )
+        _request_jupyter_proxy_config()
 
     def __init__(self, server_url=None, **kwargs):
 

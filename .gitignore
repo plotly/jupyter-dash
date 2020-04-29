@@ -3,3 +3,5 @@
 /extensions/jupyterlab/node_modules/
 /extensions/jupyterlab/*.tgz
 /dist
+/build/
+/extensions/jupyterlab/dist/

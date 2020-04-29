@@ -1,3 +1,4 @@
-recursive-include jupyter_dash/nbextension *.json
-recursive-include jupyter_dash/nbextension *.js
-recursive-include extensions/jupyterlab/*.tgz
+include jupyter_dash/nbextension *.json
+include jupyter_dash/nbextension *.js
+include jupyter_dash/labextension/package.json
+include jupyter_dash/labextension/dist *.tgz

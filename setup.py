@@ -90,7 +90,7 @@ class BuildLabextension(Command):
 
 setup(
     name='jupyter-dash',
-    version='0.0.1a2',
+    version='0.2.0a5',
     description="Dash support for the Jupyter notebook interface",
     author='Plotly',
     packages=['jupyter_dash'],

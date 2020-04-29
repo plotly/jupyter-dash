@@ -1,4 +1,5 @@
 *.egg-info
 .idea
 /extensions/jupyterlab/node_modules/
+/extensions/jupyterlab/*.tgz
 /dist

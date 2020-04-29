@@ -1,0 +1,2 @@
+recursive-include jupyter_dash/nbextension *.json
+recursive-include jupyter_dash/nbextension/static *.js

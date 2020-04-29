@@ -18,7 +18,6 @@ define([
                     // Register handlers for later messages:
                     comm.on_msg(function (msg) {
                         var msgData = msg.content.data;
-                        console.log(msgData)
                         if (msgData.type === 'base_url_request') {
                             comm.send({
                                 type: 'base_url_response',

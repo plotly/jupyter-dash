@@ -50,7 +50,7 @@ class JupyterDash(dash.Dash):
         """
         _request_jupyter_config()
 
-    def __init__(self, server_url=None, **kwargs):
+    def __init__(self, name=None, server_url=None, **kwargs):
         """"""
         # See if jupyter_server_proxy is installed
         try:
@@ -72,7 +72,7 @@ class JupyterDash(dash.Dash):
         self._input_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
 
         # Call superclass constructor
-        super(JupyterDash, self).__init__(**kwargs)
+        super(JupyterDash, self).__init__(name=name, **kwargs)
 
         # Infer server_url
         if server_url is None:

@@ -12,17 +12,46 @@ from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
 class JupyterDash(dash.Dash):
+    """A Dash subclass for developing Dash apps interactively in Jupyter.
+
+    :param server_url:  The base URL that the app will be served at, from the
+        perspective of the client. If not specified, will default to the host argument
+        passed to the ``run_server`` method.
+
+    See parent docstring for additional parameters
+    """
+    default_mode = 'external'
+    default_requests_pathname_prefix = None
+    default_server_url = None
+
     @classmethod
     def infer_jupyter_config(cls):
+        """
+        Infer the current Jupyter server configuration. This will detect
+        the proper request_pathname_prefix and server_url values to use when
+        displaying Dash apps.  When the jupyter_server_proxy Python package is
+        installed, all Dash requests will be routed through the proxy.
+
+        Requirements:
+
+        In the classic notebook, this method requires the `jupyter_dash` nbextension
+        which should be installed automatically with the installation of the
+        jupyter-dash Python package. You can see what notebook extensions are installed
+        by running the following command:
+            $ jupyter nbextension list
+
+        In JupyterLab, this method requires the `jupyterlab-dash` labextension. This
+        extension should be installed automatically with the installation of the
+        jupyter-dash Python package, but JupyterLab must be allowed to rebuild before
+        the extension is activated (JupyterLab should automatically detect the
+        extension and produce a popup dialog asking for permission to rebuild). You can
+        see what JupyterLab extensions are installed by running the following command:
+            $ jupyter labextension list
+        """
         _request_jupyter_config()
 
     def __init__(self, server_url=None, **kwargs):
-
-        # Gather default jupyter properties
-        self.default_server_url = None
-        self.default_requests_pathname_prefix = None
-        self.default_mode = 'external'
-
+        """"""
         # See if jupyter_server_proxy is installed
         try:
             import jupyter_server_proxy
@@ -30,19 +59,15 @@ class JupyterDash(dash.Dash):
         except Exception:
             self._server_proxy = False
 
-        if 'base_subpath' in _jupyter_config and self._server_proxy:
-            self.default_requests_pathname_prefix = (
+        if ('base_subpath' in _jupyter_config and self._server_proxy and
+                JupyterDash.default_requests_pathname_prefix is None):
+            JupyterDash.default_requests_pathname_prefix = (
                 _jupyter_config['base_subpath'].rstrip('/') + '/proxy/{port}/'
             )
 
-        if 'server_url' in _jupyter_config and self._server_proxy:
-            self.default_server_url = _jupyter_config['server_url']
-
-        if 'frontend' in _jupyter_config:
-            if _jupyter_config['frontend'] == 'jupyterlab':
-                self.default_mode = 'jupyterlab'
-            else:
-                self.default_mode = 'external'
+        if ('server_url' in _jupyter_config and self._server_proxy and
+                JupyterDash.default_server_url is None):
+            JupyterDash.default_server_url = _jupyter_config['server_url']
 
         self._input_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
 
@@ -77,15 +102,35 @@ class JupyterDash(dash.Dash):
     def run_server(
             self,
             mode=None, width=800, height=650,
-            host=os.getenv("HOST", "127.0.0.1"),
-            port=os.getenv("PORT", "8050"),
             **kwargs
     ):
+        """
+        Serve the app using flask in a background thread. You should not run this on a
+        production server, use gunicorn/waitress instead.
+
+        :param mode: Display mode. One of:
+            ``"external"``: The URL of the app will be displayed in the notebook
+                output cell. Clicking this URL will open the app in the default
+                web browser.
+            ``"inline"``: The app will be displayed inline in the notebook output cell
+                in an iframe.
+            ``"jupyterlab"``: The app will be displayed in a dedicate tab in the
+                JupyterLab interface. Requires JupyterLab and the `jupyterlab-dash`
+                extension.
+        :param width: Width of app when displayed using mode="inline"
+        :param height: Height of app when displayed using mode="inline"
+        :param kwargs: Additional keyword arguments to pass to the superclass
+            ``Dash.run_server`` method.
+        """
+        # Get host and port
+        host = kwargs.get("host", os.getenv("HOST", "127.0.0.1"))
+        port = kwargs.get("port", os.getenv("PORT", "8050"))
+
         # Validate / infer display mode
         valid_display_values = ["jupyterlab", "inline", "external"]
 
         if mode is None:
-            mode = self.default_mode
+            mode = JupyterDash.default_mode
         elif not isinstance(mode, str):
             raise ValueError(
                 "The mode argument must be a string\n"
@@ -122,8 +167,8 @@ class JupyterDash(dash.Dash):
 
         # Compute server_url url
         if self.server_url is None:
-            if self.default_server_url:
-                server_url = self.default_server_url.rstrip('/')
+            if JupyterDash.default_server_url:
+                server_url = JupyterDash.default_server_url.rstrip('/')
             else:
                 server_url = f'http://{host}:{port}'
         else:

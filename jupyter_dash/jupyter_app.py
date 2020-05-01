@@ -126,6 +126,9 @@ class JupyterDash(dash.Dash):
         host = kwargs.get("host", os.getenv("HOST", "127.0.0.1"))
         port = kwargs.get("port", os.getenv("PORT", "8050"))
 
+        kwargs['host'] = host
+        kwargs['port'] = port
+
         # Validate / infer display mode
         valid_display_values = ["jupyterlab", "inline", "external"]
 

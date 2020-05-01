@@ -210,7 +210,7 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def run():
-            super_run_server(host=host, port=port, **kwargs)
+            super_run_server(**kwargs)
 
         thread = Thread(target=run)
         thread.setDaemon(True)

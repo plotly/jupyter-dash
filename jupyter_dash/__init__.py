@@ -11,3 +11,5 @@ def _jupyter_nbextension_paths():
             "require": "jupyter_dash/main",
         }
     ]
+
+__version__ = "0.2.0a6"

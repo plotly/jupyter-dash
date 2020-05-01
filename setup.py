@@ -8,6 +8,7 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 from setuptools.command.build_py import build_py
 from setuptools.command.egg_info import egg_info
+from jupyter_dash import __version__
 
 here = os.path.dirname(os.path.abspath(__file__))
 is_repo = os.path.exists(os.path.join(here, ".git"))
@@ -90,7 +91,7 @@ class BuildLabextension(Command):
 
 setup(
     name='jupyter-dash',
-    version='0.2.0a5',
+    version=__version__,
     description="Dash support for the Jupyter notebook interface",
     author='Plotly',
     packages=['jupyter_dash'],

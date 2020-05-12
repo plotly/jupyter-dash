@@ -1,0 +1,6 @@
+dash
+requests
+flask
+retrying
+ipython
+ipykernel

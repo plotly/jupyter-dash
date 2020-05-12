@@ -89,13 +89,25 @@ class BuildLabextension(Command):
         )
 
 
+# Load requirements.txt
+with open(os.path.join(here, 'requirements.txt')) as f:
+    requirements = [req.strip() for req in f.read().split('\n')]
+
+# Load requirements-dev.txt
+with open(os.path.join(here, 'requirements-dev.txt')) as f:
+    dev_requirements = [req.strip() for req in f.read().split('\n')]
+
+
 setup(
     name='jupyter-dash',
     version=__version__,
     description="Dash support for the Jupyter notebook interface",
     author='Plotly',
     packages=['jupyter_dash'],
-    install_requires=['dash', 'requests', 'flask', 'retrying', 'ipython'],
+    install_requires=requirements,
+    extras_require={
+        'dev': dev_requirements
+    },
     include_package_data=True,
     package_data={
         "jupyter_dash": [

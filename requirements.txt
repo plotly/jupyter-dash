@@ -4,3 +4,4 @@ flask
 retrying
 ipython
 ipykernel
+ansi2html

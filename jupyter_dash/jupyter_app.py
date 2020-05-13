@@ -5,9 +5,17 @@ from flask import request
 import flask.cli
 from threading import Thread
 from retrying import retry
-
+import io
+import re
+import sys
 
 from IPython.display import IFrame, display
+from IPython.core.ultratb import FormattedTB
+from ansi2html import Ansi2HTMLConverter
+
+
+from werkzeug.debug.tbtools import get_current_traceback
+
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
@@ -59,6 +67,8 @@ class JupyterDash(dash.Dash):
         except Exception:
             self._server_proxy = False
 
+        self._traceback = None
+
         if ('base_subpath' in _jupyter_config and self._server_proxy and
                 JupyterDash.default_requests_pathname_prefix is None):
             JupyterDash.default_requests_pathname_prefix = (
@@ -101,7 +111,7 @@ class JupyterDash(dash.Dash):
 
     def run_server(
             self,
-            mode=None, width=800, height=650,
+            mode=None, width=800, height=650, inline_exceptions=None,
             **kwargs
     ):
         """
@@ -119,6 +129,9 @@ class JupyterDash(dash.Dash):
                 extension.
         :param width: Width of app when displayed using mode="inline"
         :param height: Height of app when displayed using mode="inline"
+        :param inline_exceptions: If True, callback exceptions are displayed inline
+            in the the notebook output cell. Defaults to True if mode=="inline",
+            False otherwise.
         :param kwargs: Additional keyword arguments to pass to the superclass
             ``Dash.run_server`` method.
         """
@@ -151,6 +164,10 @@ class JupyterDash(dash.Dash):
                     )
                 )
 
+        # Infer inline_exceptions and ui
+        if inline_exceptions is None:
+            inline_exceptions = mode == "inline"
+
         # Terminate any existing server using this port
         self._terminate_server_for_port(host, port)
 
@@ -181,28 +198,42 @@ class JupyterDash(dash.Dash):
             server_url=server_url, requests_pathname_prefix=requests_pathname_prefix
         )
 
-        # Enable supported dev tools by default
-        for k in [
-            'dev_tools_silence_routes_logging',
-            # 'dev_tools_ui',  # Stack traces don't work yet
-            'dev_tools_props_check',
-            'dev_tools_serve_dev_bundles',
-            'dev_tools_prune_errors'
-        ]:
-            if k not in kwargs:
-                kwargs[k] = True
+        # Default the global "debug" flag to True
+        debug = kwargs.get('debug', True)
 
-        if 'dev_tools_hot_reload' not in kwargs:
-            # Enable hot-reload by default in "external" mode. Enabling in inline or
-            # in JupyterLab extension seems to cause Jupyter problems sometimes when
-            # there is no active kernel.
-            kwargs['dev_tools_hot_reload'] = mode == "external"
-
-        # Disable debug because it doesn't work in notebook
+        # Disable debug flag when calling superclass because it doesn't work
+        # in notebook
         kwargs['debug'] = False
+
+        # Enable supported dev tools
+        if debug:
+            for k in [
+                'dev_tools_silence_routes_logging',
+                'dev_tools_props_check',
+                'dev_tools_serve_dev_bundles',
+                'dev_tools_prune_errors'
+            ]:
+                if k not in kwargs:
+                    kwargs[k] = True
+
+            # Enable dev tools by default unless app is displayed inline
+            if 'dev_tools_ui' not in kwargs:
+                kwargs['dev_tools_ui'] = mode != "inline"
+
+            if 'dev_tools_hot_reload' not in kwargs:
+                # Enable hot-reload by default in "external" mode. Enabling in inline or
+                # in JupyterLab extension seems to cause Jupyter problems sometimes when
+                # there is no active kernel.
+                kwargs['dev_tools_hot_reload'] = mode == "external"
 
         # suppress warning banner printed to standard out
         flask.cli.show_server_banner = lambda *args, **kwargs: None
+
+        # Set up custom callback exception handling
+        self._config_callback_exception_handling(
+            dev_tools_prune_errors=kwargs.get('dev_tools_prune_errors', True),
+            inline_exceptions=inline_exceptions,
+        )
 
         @retry(
             stop_max_attempt_number=15,
@@ -257,6 +288,49 @@ $ jupyter labextension install jupyterlab-dash
                 'port': port,
                 'url': dashboard_url,
             })
+
+    def _config_callback_exception_handling(
+            self, dev_tools_prune_errors, inline_exceptions
+    ):
+
+        @self.server.errorhandler(Exception)
+        def _wrap_errors(_):
+            """Install traceback handling for callbacks"""
+            self._traceback = sys.exc_info()[2]
+
+            # Compute number of stack frames to skip to get down to callback
+            tb = get_current_traceback()
+            skip = 0
+            if dev_tools_prune_errors:
+                for i, line in enumerate(tb.plaintext.splitlines()):
+                    if "%% callback invoked %%" in line:
+                        skip = int((i + 1) / 2)
+                        break
+
+            # Use IPython traceback formatting to build colored ANSI traceback string
+            ostream = io.StringIO()
+            ipytb = FormattedTB(
+                tb_offset=skip,
+                mode="Verbose",
+                color_scheme="Linux",
+                include_vars=True,
+                ostream=ostream
+            )
+            ipytb()
+
+            # Print colored ANSI representation if requested
+            if inline_exceptions:
+                print(ostream.getvalue())
+
+            # Use ansi2html to convert the colored ANSI string to HTML
+            conv = Ansi2HTMLConverter(scheme="ansi2html", dark_bg=False)
+            html_str = conv.convert(ostream.getvalue())
+
+            # Remove explicit background color so Dash dev-tools can set background
+            # color
+            html_str = re.sub("background-color:[^;]+;", "", html_str)
+
+            return html_str, 500
 
     @classmethod
     def _terminate_server_for_port(cls, host, port):

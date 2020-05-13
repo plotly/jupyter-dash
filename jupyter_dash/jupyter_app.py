@@ -8,6 +8,7 @@ from retrying import retry
 import io
 import re
 import sys
+import inspect
 
 from IPython.display import IFrame, display
 from IPython.core.ultratb import FormattedTB
@@ -299,28 +300,39 @@ $ jupyter labextension install jupyterlab-dash
             self._traceback = sys.exc_info()[2]
 
             # Compute number of stack frames to skip to get down to callback
-            tb = get_current_traceback()
+            tb_werkzeug = get_current_traceback()
             skip = 0
             if dev_tools_prune_errors:
-                for i, line in enumerate(tb.plaintext.splitlines()):
+                for i, line in enumerate(tb_werkzeug.plaintext.splitlines()):
                     if "%% callback invoked %%" in line:
                         skip = int((i + 1) / 2)
                         break
 
-            # Use IPython traceback formatting to build colored ANSI traceback string
-            ostream = io.StringIO()
-            ipytb = FormattedTB(
-                tb_offset=skip,
-                mode="Verbose",
-                color_scheme="Linux",
-                include_vars=True,
-                ostream=ostream
-            )
-            ipytb()
+            # Customized formatargvalues function so we can place function parameters
+            # on separate lines
+            original_formatargvalues = inspect.formatargvalues
+            inspect.formatargvalues = custom_formatargvalues
+            try:
+                # Use IPython traceback formatting to build colored ANSI traceback
+                # string
+                ostream = io.StringIO()
+                ipytb = FormattedTB(
+                    tb_offset=skip,
+                    mode="Verbose",
+                    color_scheme="Linux",
+                    include_vars=True,
+                    ostream=ostream
+                )
+                ipytb()
+            finally:
+                # Restore formatargvalues
+                inspect.formatargvalues = original_formatargvalues
 
             # Print colored ANSI representation if requested
+            ansi_stacktrace = ostream.getvalue()
+
             if inline_exceptions:
-                print(ostream.getvalue())
+                print(ansi_stacktrace)
 
             # Use ansi2html to convert the colored ANSI string to HTML
             conv = Ansi2HTMLConverter(scheme="ansi2html", dark_bg=False)
@@ -346,3 +358,32 @@ $ jupyter labextension install jupyterlab-dash
             response = requests.get(shutdown_url)
         except Exception as e:
             pass
+
+
+def custom_formatargvalues(
+        args, varargs, varkw, locals,
+        formatarg=str,
+        formatvarargs=lambda name: '*' + name,
+        formatvarkw=lambda name: '**' + name,
+        formatvalue=lambda value: '=' + repr(value)):
+
+    """Copied from inspect.formatargvalues, modified to place function
+    arguments on separate lines"""
+    def convert(name, locals=locals,
+                formatarg=formatarg, formatvalue=formatvalue):
+        return formatarg(name) + formatvalue(locals[name])
+    specs = []
+    for i in range(len(args)):
+        specs.append(convert(args[i]))
+    if varargs:
+        specs.append(formatvarargs(varargs) + formatvalue(locals[varargs]))
+    if varkw:
+        specs.append(formatvarkw(varkw) + formatvalue(locals[varkw]))
+
+    result = '(' + ', '.join(specs) + ')'
+
+    if len(result) < 40:
+        return result
+    else:
+        # Put each arg on a separate line
+        return '(\n    ' + ',\n    '.join(specs) + '\n)'

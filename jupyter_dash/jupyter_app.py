@@ -273,16 +273,6 @@ class JupyterDash(dash.Dash):
                 dashboard_url=dashboard_url
             ))
         elif mode == 'jupyterlab':
-            if _jupyter_config.get("frontend") != "jupyterlab":
-                raise IOError("""
-Unable to communicate with the jupyterlab-dash JupyterLab extension.
-Is this Python kernel running inside JupyterLab with the jupyterlab-dash
-extension installed?
-
-You can install the extension with:
-
-$ jupyter labextension install jupyterlab-dash
-""")
             # Update front-end extension
             _dash_comm.send({
                 'type': 'show',

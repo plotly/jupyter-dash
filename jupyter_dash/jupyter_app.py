@@ -324,7 +324,12 @@ $ jupyter labextension install jupyterlab-dash
 
             # Use ansi2html to convert the colored ANSI string to HTML
             conv = Ansi2HTMLConverter(scheme="ansi2html", dark_bg=False)
-            html_str = conv.convert(ostream.getvalue())
+            html_str = conv.convert(ansi_stacktrace)
+
+            html_str = html_str.replace(
+                '<html>',
+                '<html style="width: 80ex;">'
+            )
 
             # Remove explicit background color so Dash dev-tools can set background
             # color

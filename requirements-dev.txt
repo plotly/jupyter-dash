@@ -1,1 +1,2 @@
 jupyterlab>=2.0
+jupyter_server_proxy

@@ -107,6 +107,7 @@ setup(
     name='jupyter-dash',
     version=__version__,
     description="Dash support for the Jupyter notebook interface",
+    long_description=readme(),
     long_description_content_type="text/markdown",
     author='Plotly',
     license="MIT",

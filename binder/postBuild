@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Change directory to project root
+cd ..
+
+# Install package from setup.py
+python setup.py install .
+
+# Install classic notebook extension
+jupyter nbextension install --py jupyter_dash.nbextension --sys-prefix
+
+# Install a JupyterLab extension
+jupyter labextension install jupyter_dash/labextension

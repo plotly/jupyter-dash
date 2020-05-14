@@ -7,7 +7,7 @@ python setup.py bdist_wheel
 ls dist/
 
 # Install wheel
-python -m pip install dist/jupyter-dash-*.whl
+python -m pip install dist/jupyter_dash-*.whl
 
 # List installed packages
 python -m pip list

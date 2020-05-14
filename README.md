@@ -1,3 +1,5 @@
+Work in progress. Stay tuned!
+
 # Jupyter Dash
 This library makes it easy to develop Plotly Dash apps interactively from with Jupyter environments.
 

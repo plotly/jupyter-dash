@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install package from setup.py
-python setup.py install .
+python setup.py install
 
 # Install classic notebook extension
 jupyter nbextension install --py jupyter_dash.nbextension --sys-prefix

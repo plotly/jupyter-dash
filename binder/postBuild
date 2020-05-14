@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Change directory to project root
-cd ..
-
 # Install package from setup.py
 python setup.py install .
 

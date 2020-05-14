@@ -342,9 +342,11 @@ class JupyterDash(dash.Dash):
             conv = Ansi2HTMLConverter(scheme="ansi2html", dark_bg=False)
             html_str = conv.convert(ansi_stacktrace)
 
+            # Set width to fit 75-character wide stack trace and font to a size the
+            # won't require a horizontal scroll bar
             html_str = html_str.replace(
                 '<html>',
-                '<html style="width: 80ex;">'
+                '<html style="width: 75ch; font-size: 0.86em">'
             )
 
             # Remove explicit background color so Dash dev-tools can set background

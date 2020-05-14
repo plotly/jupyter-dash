@@ -33,7 +33,7 @@ def _jupyter_comm_response_received():
 def _request_jupyter_config(timeout=2):
     # Heavily inspired by implementation of CaptureExecution in the
     if _dash_comm.kernel is None:
-        # Not in jupyter server setting
+        # Not in jupyter setting
         return
 
     _send_jupyter_config_comm_request()

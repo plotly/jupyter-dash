@@ -10,6 +10,7 @@ import re
 import sys
 import inspect
 
+from IPython import get_ipython
 from IPython.display import IFrame, display
 from IPython.core.ultratb import FormattedTB
 from ansi2html import Ansi2HTMLConverter
@@ -32,6 +33,7 @@ class JupyterDash(dash.Dash):
     default_mode = 'external'
     default_requests_pathname_prefix = None
     default_server_url = None
+    _in_ipython = get_ipython() is not None
 
     @classmethod
     def infer_jupyter_config(cls):
@@ -57,10 +59,21 @@ class JupyterDash(dash.Dash):
         see what JupyterLab extensions are installed by running the following command:
             $ jupyter labextension list
         """
+        if not JupyterDash._in_ipython:
+            # No op when not running in a Jupyter context
+            return
+
         _request_jupyter_config()
 
     def __init__(self, name=None, server_url=None, **kwargs):
         """"""
+        # Call superclass constructor
+        super(JupyterDash, self).__init__(name=name, **kwargs)
+
+        if not JupyterDash._in_ipython:
+            # Nothing else to do when not running in a Jupyter context
+            return
+
         # See if jupyter_server_proxy is installed
         try:
             import jupyter_server_proxy
@@ -81,9 +94,6 @@ class JupyterDash(dash.Dash):
             JupyterDash.default_server_url = _jupyter_config['server_url']
 
         self._input_pathname_prefix = kwargs.get('requests_pathname_prefix', None)
-
-        # Call superclass constructor
-        super(JupyterDash, self).__init__(name=name, **kwargs)
 
         # Infer server_url
         if server_url is None:
@@ -136,6 +146,10 @@ class JupyterDash(dash.Dash):
         :param kwargs: Additional keyword arguments to pass to the superclass
             ``Dash.run_server`` method.
         """
+        if not JupyterDash._in_ipython:
+            # No op else to do when not running in a Jupyter context
+            return
+
         # Get host and port
         host = kwargs.get("host", os.getenv("HOST", "127.0.0.1"))
         port = kwargs.get("port", os.getenv("PORT", "8050"))
@@ -301,7 +315,7 @@ class JupyterDash(dash.Dash):
             # Customized formatargvalues function so we can place function parameters
             # on separate lines
             original_formatargvalues = inspect.formatargvalues
-            inspect.formatargvalues = custom_formatargvalues
+            inspect.formatargvalues = _custom_formatargvalues
             try:
                 # Use IPython traceback formatting to build colored ANSI traceback
                 # string
@@ -350,7 +364,7 @@ class JupyterDash(dash.Dash):
             pass
 
 
-def custom_formatargvalues(
+def _custom_formatargvalues(
         args, varargs, varkw, locals,
         formatarg=str,
         formatvarargs=lambda name: '*' + name,

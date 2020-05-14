@@ -4,7 +4,7 @@
 python setup.py install
 
 # Install classic notebook extension
-jupyter nbextension install --py jupyter_dash.nbextension --sys-prefix
+jupyter nbextension install --py jupyter_dash --sys-prefix
 
 # Install a JupyterLab extension
-jupyter labextension install jupyter_dash/labextension
+jupyter labextension install extensions/jupyterlab

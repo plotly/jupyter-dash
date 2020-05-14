@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Install package from setup.py
-python setup.py install
+# Build wheel
+python setup.py bdist_wheel
 
-# Install classic notebook extension
-jupyter nbextension install --py jupyter_dash --sys-prefix
+# Install wheel
+pip install dist/jupyter-dash-*.whl
 
-# Install a JupyterLab extension
-jupyter labextension install extensions/jupyterlab
+# Rebuild JupyterLab to include jupyterlab-dash extension
+jupyter lab build

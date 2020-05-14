@@ -89,6 +89,11 @@ class BuildLabextension(Command):
         )
 
 
+def readme():
+    with open(os.path.join(here, "README.md")) as f:
+        return f.read()
+
+
 # Load requirements.txt
 with open(os.path.join(here, 'requirements.txt')) as f:
     requirements = [req.strip() for req in f.read().split('\n')]
@@ -102,7 +107,11 @@ setup(
     name='jupyter-dash',
     version=__version__,
     description="Dash support for the Jupyter notebook interface",
+    long_description_content_type="text/markdown",
     author='Plotly',
+    license="MIT",
+    url="https://github.com/plotly/jupyter-dash",
+    project_urls={"Github": "https://github.com/plotly/jupyter-dash"},
     packages=['jupyter_dash'],
     install_requires=requirements,
     extras_require={

@@ -146,8 +146,12 @@ class JupyterDash(dash.Dash):
         :param kwargs: Additional keyword arguments to pass to the superclass
             ``Dash.run_server`` method.
         """
+        # Get superclass run_server method
+        super_run_server = super(JupyterDash, self).run_server
+
         if not JupyterDash._in_ipython:
-            # No op else to do when not running in a Jupyter context
+            # If not in IPython context, call run run_server synchronously
+            super_run_server(**kwargs)
             return
 
         # Get host and port
@@ -185,9 +189,6 @@ class JupyterDash(dash.Dash):
 
         # Terminate any existing server using this port
         self._terminate_server_for_port(host, port)
-
-        # Run superclass run_server is separate thread
-        super_run_server = super(JupyterDash, self).run_server
 
         # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)

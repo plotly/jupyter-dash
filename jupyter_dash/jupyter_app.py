@@ -31,7 +31,9 @@ class JupyterDash(dash.Dash):
     See parent docstring for additional parameters
     """
     default_mode = 'external'
-    default_requests_pathname_prefix = None
+    default_requests_pathname_prefix = os.environ.get(
+        "DASH_REQUESTS_PATHNAME_PREFIX", None
+    )
     default_server_url = None
     _in_ipython = get_ipython() is not None
 

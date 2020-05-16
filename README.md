@@ -18,7 +18,7 @@ $ conda install -c plotly jupyter-dash
 ```
 
 ## JupyterLab support
-When used in JupyterLab, JupyterDash depends on the [`jupyterlab-dash`](https://www.npmjs.com/package/jupyterlab-dash) JupyterLab extension. 
+When used in JupyterLab, JupyterDash depends on the [`jupyterlab-dash`](https://www.npmjs.com/package/jupyterlab-dash) JupyterLab extension, which requires JupyterLab version 2.0 or above.
  
 This extension is included with the Python package, but in order to activate it JupyterLab must be rebuilt. JupyterLab should automatically produce a popup dialog asking for permission to rebuild, but the rebuild can also be performed manually from the command line using:
  

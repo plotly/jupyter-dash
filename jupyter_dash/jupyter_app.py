@@ -36,7 +36,7 @@ class JupyterDash(dash.Dash):
     _in_ipython = get_ipython() is not None
 
     @classmethod
-    def infer_jupyter_config(cls):
+    def infer_jupyter_proxy_config(cls):
         """
         Infer the current Jupyter server configuration. This will detect
         the proper request_pathname_prefix and server_url values to use when

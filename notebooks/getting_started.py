@@ -32,7 +32,7 @@ import pandas as pd
 # When running in JupyterHub or Binder, call the `infer_jupyter_config` function to detect the proxy configuration.
 
 # %%
-JupyterDash.infer_jupyter_config()
+JupyterDash.infer_jupyter_proxy_config()
 
 # %% [markdown]
 # Load and preprocess data

@@ -7,9 +7,9 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/plotly/jupyterlab-dash",
+  "homepage": "https://github.com/plotly/jupyter-dash",
   "bugs": {
-    "url": "https://github.com/plotly/jupyterlab-dash/issues"
+    "url": "https://github.com/plotly/jupyter-dash/issues"
   },
   "license": "MIT",
   "author": "Plotly",
@@ -21,7 +21,7 @@
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/plotly/jupyterlab-dash.git"
+    "url": "git+https://github.com/plotly/jupyter-dash.git"
   },
   "scripts": {
     "build": "tsc",

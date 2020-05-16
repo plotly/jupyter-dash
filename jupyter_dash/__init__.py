@@ -1,6 +1,6 @@
 import jupyter_dash.comms
 from .jupyter_app import JupyterDash
-
+from .version import __version__
 
 def _jupyter_nbextension_paths():
     return [
@@ -11,5 +11,3 @@ def _jupyter_nbextension_paths():
             "require": "jupyter_dash/main",
         }
     ]
-
-__version__ = "0.2.0a10"

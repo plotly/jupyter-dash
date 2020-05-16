@@ -1,0 +1,39 @@
+{% set sdata = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+{% set version = sdata.get('version') %}
+{% set name = sdata.get('name') %}
+
+package:
+  name: jupyter-dash
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  number: 1
+  script: |
+    {{ PYTHON }} -m pip install . --no-deps --ignore-installed --no-cache-dir -q
+  noarch: python
+
+requirements:
+  host:
+    - python=3.7
+    - pip
+    - nodejs
+    - jupyterlab=2.0
+
+  run:
+    - python
+    {% for dep in sdata.get('install_requires',{}) %}
+    - {{ dep }}
+    {% endfor %}
+
+test:
+  imports:
+    - jupyter_dash
+
+about:
+  home: {{ sdata['url'] }}
+  summary: {{ sdata['description'] }}
+  license: {{ sdata['license'] }}
+  license_file: '{{ environ["RECIPE_DIR"] }}/../LICENSE.txt'

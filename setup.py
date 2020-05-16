@@ -8,10 +8,14 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 from setuptools.command.build_py import build_py
 from setuptools.command.egg_info import egg_info
-from jupyter_dash import __version__
 
 here = os.path.dirname(os.path.abspath(__file__))
 is_repo = os.path.exists(os.path.join(here, ".git"))
+
+
+# Load __version__ using exec so that we don't import jupyter_dash module
+main_ns = {}
+exec(open("jupyter_dash/version.py").read(), main_ns)  # pylint: disable=exec-used
 
 
 def get_labextension_version():
@@ -96,16 +100,16 @@ def readme():
 
 # Load requirements.txt
 with open(os.path.join(here, 'requirements.txt')) as f:
-    requirements = [req.strip() for req in f.read().split('\n')]
+    requirements = [req.strip() for req in f.read().split('\n') if req.strip()]
 
 # Load requirements-dev.txt
 with open(os.path.join(here, 'requirements-dev.txt')) as f:
-    dev_requirements = [req.strip() for req in f.read().split('\n')]
+    dev_requirements = [req.strip() for req in f.read().split('\n') if req.strip()]
 
 
 setup(
     name='jupyter-dash',
-    version=__version__,
+    version=main_ns["__version__"],
     description="Dash support for the Jupyter notebook interface",
     long_description=readme(),
     long_description_content_type="text/markdown",

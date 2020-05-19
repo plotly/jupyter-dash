@@ -3,7 +3,7 @@
 
 This library makes it easy to develop Plotly Dash apps interactively from within Jupyter environments (e.g. classic Notebook, JupyterLab, Visual Studio Code notebooks, nteract, PyCharm notebooks, etc.).
 
-![](images/jupyterlab_mode.gif)
+![jupterlab example](https://user-images.githubusercontent.com/15064365/82324108-150d4200-99a7-11ea-8d22-5c1bb8acaadb.gif)
 
 See the [notebooks/getting_started.ipynb](https://github.com/plotly/jupyter-dash/blob/master/notebooks/getting_started.ipynb) for more information and example usage.
 

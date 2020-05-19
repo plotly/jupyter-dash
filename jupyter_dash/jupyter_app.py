@@ -14,6 +14,7 @@ from IPython import get_ipython
 from IPython.display import IFrame, display
 from IPython.core.ultratb import FormattedTB
 from ansi2html import Ansi2HTMLConverter
+import uuid
 
 
 from werkzeug.debug.tbtools import get_current_traceback
@@ -36,6 +37,7 @@ class JupyterDash(dash.Dash):
     )
     default_server_url = None
     _in_ipython = get_ipython() is not None
+    _token = str(uuid.uuid4())
 
     @classmethod
     def infer_jupyter_proxy_config(cls):
@@ -107,7 +109,7 @@ class JupyterDash(dash.Dash):
         self.server_url = server_url
 
         # Register route to shut down server
-        @self.server.route('/_shutdown', methods=['GET'])
+        @self.server.route('/_shutdown_' + JupyterDash._token, methods=['GET'])
         def shutdown():
             func = request.environ.get('werkzeug.server.shutdown')
             if func is None:
@@ -116,7 +118,7 @@ class JupyterDash(dash.Dash):
             return 'Server shutting down...'
 
         # Register route that we can use to poll to see when server is running
-        @self.server.route('/_alive', methods=['GET'])
+        @self.server.route('/_alive_' + JupyterDash._token, methods=['GET'])
         def alive():
             return 'Alive'
 
@@ -266,8 +268,8 @@ class JupyterDash(dash.Dash):
         thread.start()
 
         # Wait for server to start up
-        alive_url = "http://{host}:{port}/_alive".format(
-            host=host, port=port
+        alive_url = "http://{host}:{port}/_alive_{token}".format(
+            host=host, port=port, token=JupyterDash._token
         )
 
         # Wait for app to respond to _alive endpoint
@@ -360,8 +362,8 @@ class JupyterDash(dash.Dash):
 
     @classmethod
     def _terminate_server_for_port(cls, host, port):
-        shutdown_url = "http://{host}:{port}/_shutdown".format(
-            host=host, port=port
+        shutdown_url = "http://{host}:{port}/_shutdown_{token}".format(
+            host=host, port=port, token=JupyterDash._token
         )
         try:
             response = requests.get(shutdown_url)

@@ -98,6 +98,11 @@ class BuildLabextension(Command):
             os.path.join(here, "extensions", "jupyterlab", "README.md"),
         )
 
+        shutil.copytree(
+            os.path.join(here, "images"),
+            os.path.join(here, "extensions", "jupyterlab", "images"),
+        )
+
 
 def readme():
     with open(os.path.join(here, "README.md")) as f:

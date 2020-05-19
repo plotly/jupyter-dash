@@ -23,7 +23,7 @@ requirements:
     - jupyterlab=2.0
 
   run:
-    - python
+    - python>=3.5
     {% for dep in sdata.get('install_requires',{}) %}
     - {{ dep }}
     {% endfor %}

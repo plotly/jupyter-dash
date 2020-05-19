@@ -134,6 +134,7 @@ setup(
             "labextension/package.json",
         ],
     },
+    python_requires=">=3.5",
     data_files=[
         # like `jupyter nbextension install --sys-prefix`
         ("share/jupyter/nbextensions/jupyter_dash", [

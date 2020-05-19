@@ -210,7 +210,7 @@ class JupyterDash(dash.Dash):
             if JupyterDash.default_server_url:
                 server_url = JupyterDash.default_server_url.rstrip('/')
             else:
-                server_url = f'http://{host}:{port}'
+                server_url = 'http://{host}:{port}'.format(host=host, port=port)
         else:
             server_url = self.server_url.rstrip('/')
 

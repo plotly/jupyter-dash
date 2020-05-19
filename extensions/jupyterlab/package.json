@@ -38,7 +38,7 @@
   "devDependencies": {
     "prettier": "1.19.1",
     "rimraf": "2.7.1",
-    "typescript": "3.8.3"
+    "typescript": "3.9.2"
   },
   "jupyterlab": {
     "extension": true

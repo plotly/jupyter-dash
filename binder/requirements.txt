@@ -1,5 +1,6 @@
 -r ../requirements.txt
--r ../requirements-dev.txt
+notebook>=6.0
+jupyter_server_proxy
 pandas
 numpy
 jupyter-dash

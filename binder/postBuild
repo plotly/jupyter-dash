@@ -1,16 +1,4 @@
 #!/bin/bash
 
-# Build wheel
-python setup.py bdist_wheel
-
-# Show build packages
-ls dist/
-
-# Install wheel
-pip install dist/jupyter_dash-*.whl
-
-# List installed packages
-pip list
-
 # Rebuild JupyterLab to include jupyterlab-dash extension
 jupyter lab build

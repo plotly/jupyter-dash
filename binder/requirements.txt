@@ -2,3 +2,4 @@
 -r ../requirements-dev.txt
 pandas
 numpy
+jupyter-dash

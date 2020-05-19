@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# Rebuild JupyterLab to include jupyterlab-dash extension
-jupyter lab build

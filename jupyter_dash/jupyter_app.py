@@ -279,8 +279,17 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def wait_for_app():
-            res = requests.get(alive_url)
-            return res.content.decode()
+            res = requests.get(alive_url).content.decode()
+            if res != "Alive":
+                url = "http://{host}:{port}".format(
+                    host=host, port=port, token=JupyterDash._token
+                )
+                raise OSError(
+                    "Address '{url}' already in use.\n"
+                    "    Try passing a different port to run_server.".format(
+                        url=url
+                    )
+                )
 
         wait_for_app()
 

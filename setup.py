@@ -92,6 +92,12 @@ class BuildLabextension(Command):
             cwd=in_labextension_dir,
         )
 
+        # Copy README to extension directory so npm finds it
+        shutil.copy(
+            os.path.join(here, "README.md"),
+            os.path.join(here, "extensions", "jupyterlab", "README.md"),
+        )
+
 
 def readme():
     with open(os.path.join(here, "README.md")) as f:

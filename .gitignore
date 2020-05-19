@@ -8,3 +8,4 @@
 /jupyter_dash/labextension/dist/
 /jupyter_dash/labextension/package.json
 .ipynb_checkpoints
+/extensions/jupyterlab/README.md

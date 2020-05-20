@@ -3,5 +3,6 @@ include jupyter_dash/nbextension *.js
 include jupyter_dash/labextension/package.json
 include jupyter_dash/labextension/dist *.tgz
 include requirements.txt
+include requirements-dev.txt
 include README.md
 include LICENSE.txt

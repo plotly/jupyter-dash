@@ -29,7 +29,7 @@ $ jupyter lab build
 To check that the extension is installed properly, call `jupyter labextension list`.
 
 # Features
-To learn more about the features of JupyterDash, check out the announcement post.
+To learn more about the features of JupyterDash, check out the [announcement post](https://medium.com/plotly/introducing-jupyterdash-811f1f57c02e).
 
 # Development
 To develop JupyterDash, first create and activate a virtual environment using virtualenv or conda.

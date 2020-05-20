@@ -14,7 +14,7 @@ $ pip install jupyter-dash
 ```
 or conda
 ```
-$ conda install -c plotly jupyter-dash
+$ conda install -c conda-forge -c plotly jupyter-dash
 ```
 
 ## JupyterLab support

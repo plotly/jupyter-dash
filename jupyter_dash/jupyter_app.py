@@ -9,6 +9,7 @@ import io
 import re
 import sys
 import inspect
+import warnings
 
 from IPython import get_ipython
 from IPython.display import IFrame, display
@@ -37,6 +38,7 @@ class JupyterDash(dash.Dash):
     )
     default_server_url = None
     _in_ipython = get_ipython() is not None
+    _in_colab = "google.colab" in sys.modules
     _token = str(uuid.uuid4())
 
     @classmethod
@@ -63,14 +65,31 @@ class JupyterDash(dash.Dash):
         see what JupyterLab extensions are installed by running the following command:
             $ jupyter labextension list
         """
-        if not JupyterDash._in_ipython:
-            # No op when not running in a Jupyter context
+        if not JupyterDash._in_ipython or JupyterDash._in_colab:
+            # No op when not running in a Jupyter context or when in Colab
             return
-
-        _request_jupyter_config()
+        else:
+            # Assume classic notebook or JupyterLab
+            _request_jupyter_config()
 
     def __init__(self, name=None, server_url=None, **kwargs):
         """"""
+        # Strip unsupported properties and warn
+        if JupyterDash._in_colab:
+            unsupported_colab_props = [
+                'requests_pathname_prefix',
+                'routes_pathname_prefix',
+                'url_base_pathname'
+            ]
+            for prop in unsupported_colab_props:
+                if prop in kwargs:
+                    kwargs.pop(prop)
+                    warnings.warn(
+                        "The {prop} argument is ignored when running in Colab".format(
+                            prop=prop
+                        )
+                    )
+
         # Call superclass constructor
         super(JupyterDash, self).__init__(name=name, **kwargs)
 
@@ -105,6 +124,9 @@ class JupyterDash(dash.Dash):
             if domain_base:
                 # Dash Enterprise set PLOTLY_DASH_DOMAIN_BASE environment variable
                 server_url = 'https://' + domain_base
+        elif JupyterDash._in_colab:
+            warnings.warn("The server_url argument is ignored when running in Colab")
+            server_url = None
 
         self.server_url = server_url
 
@@ -126,7 +148,7 @@ class JupyterDash(dash.Dash):
 
     def run_server(
             self,
-            mode=None, width=800, height=650, inline_exceptions=None,
+            mode=None, width="100%", height=650, inline_exceptions=None,
             **kwargs
     ):
         """
@@ -166,7 +188,10 @@ class JupyterDash(dash.Dash):
         kwargs['port'] = port
 
         # Validate / infer display mode
-        valid_display_values = ["jupyterlab", "inline", "external"]
+        if JupyterDash._in_colab:
+            valid_display_values = ["inline", "external"]
+        else:
+            valid_display_values = ["jupyterlab", "inline", "external"]
 
         if mode is None:
             mode = JupyterDash.default_mode
@@ -293,6 +318,21 @@ class JupyterDash(dash.Dash):
 
         wait_for_app()
 
+        if JupyterDash._in_colab:
+            self._display_in_colab(dashboard_url, port, mode, width, height)
+        else:
+            self._display_in_jupyter(dashboard_url, port, mode, width, height)
+
+    def _display_in_colab(self, dashboard_url, port, mode, width, height):
+        from google.colab import output
+        if mode == 'inline':
+            output.serve_kernel_port_as_iframe(port, width=width, height=height)
+        elif mode == 'external':
+            # Display a hyperlink that can be clicked to open Dashboard
+            print("Dash app running on:")
+            output.serve_kernel_port_as_window(port, anchor_text=dashboard_url)
+
+    def _display_in_jupyter(self, dashboard_url, port, mode, width, height):
         if mode == 'inline':
             display(IFrame(dashboard_url, width, height))
         elif mode == 'external':

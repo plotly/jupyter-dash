@@ -153,7 +153,5 @@ setup(
     ],
     cmdclass=dict(
         build_js=BuildLabextension,
-        build_py=js_prerelease(build_py),
-        sdist=js_prerelease(sdist),
     )
 )

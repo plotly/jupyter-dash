@@ -154,7 +154,6 @@ setup(
     cmdclass=dict(
         build_js=BuildLabextension,
         build_py=js_prerelease(build_py),
-        egg_info=js_prerelease(egg_info),
         sdist=js_prerelease(sdist),
     )
 )

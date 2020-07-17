@@ -148,7 +148,7 @@ class JupyterDash(dash.Dash):
 
     def run_server(
             self,
-            mode=None, width=800, height=650, inline_exceptions=None,
+            mode=None, width="100%", height=650, inline_exceptions=None,
             **kwargs
     ):
         """

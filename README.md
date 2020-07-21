@@ -28,6 +28,12 @@ $ jupyter lab build
 
 To check that the extension is installed properly, call `jupyter labextension list`.
 
+## Colab support
+As of version 0.3.0, `JupyterDash` works in Colab with no additional configuration. Just install `jupyter-dash` using pip in a Colab notebook cell
+```
+!pip install jupyter-dash
+```
+
 # Features
 To learn more about the features of JupyterDash, check out the [announcement post](https://medium.com/plotly/introducing-jupyterdash-811f1f57c02e).
 

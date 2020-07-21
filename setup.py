@@ -5,9 +5,6 @@ import json
 import time
 
 from setuptools import setup, Command
-from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
-from setuptools.command.egg_info import egg_info
 
 here = os.path.dirname(os.path.abspath(__file__))
 is_repo = os.path.exists(os.path.join(here, ".git"))

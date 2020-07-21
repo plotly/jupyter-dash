@@ -4,6 +4,5 @@
 /extensions/jupyterlab/*.tgz
 /dist
 /build/
-/extensions/jupyterlab/dist/
 .ipynb_checkpoints
 /extensions/jupyterlab/README.md

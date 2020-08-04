@@ -120,9 +120,9 @@ class JupyterDash(dash.Dash):
 
         # Infer server_url
         if server_url is None:
-            domain_base = os.environ.get('PLOTLY_DASH_DOMAIN_BASE', None)
+            domain_base = os.environ.get('DASH_DOMAIN_BASE', None)
             if domain_base:
-                # Dash Enterprise set PLOTLY_DASH_DOMAIN_BASE environment variable
+                # Dash Enterprise sets DASH_DOMAIN_BASE environment variable
                 server_url = 'https://' + domain_base
         elif JupyterDash._in_colab:
             warnings.warn("The server_url argument is ignored when running in Colab")

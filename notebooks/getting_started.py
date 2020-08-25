@@ -202,7 +202,7 @@ def update_x_timeseries(hoverData, yaxis_column_name, axis_type):
 # %% [markdown]
 # Serve the app using `run_server`.  Unlike the standard `Dash.run_server` method, the `JupyterDash.run_server` method doesn't block execution of the notebook. It serves the app in a background thread, making it possible to run other notebook calculations while the app is running.
 #
-# This makes it possible to iterativly update the app without rerunning the potentially expensive data processing steps.
+# This makes it possible to iteratively update the app without rerunning the potentially expensive data processing steps.
 
 # %%
 app.run_server()

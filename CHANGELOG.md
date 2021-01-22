@@ -2,6 +2,10 @@
 All notable changes to `jupyter-dash` will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.4.0 - 2021-01-22
+### Added
+ - JuypterLab 3.0 support
+
 ## 0.3.0 - 2020-07-21
 ### Added
  - Added suport for using JupyterDash in Google Colab ([#27](https://github.com/plotly/jupyter-dash/pull/27))

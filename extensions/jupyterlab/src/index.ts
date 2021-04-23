@@ -125,6 +125,10 @@ function registerCommTarget(
             widget = widgets.get(msgData.port);
           }
 
+          if(msgData.title !== "") {
+            widget.title.label = msgData.title
+          }
+
           if (!widget.isAttached) {
             // Attach the widget to the main work area
             // if it's not there

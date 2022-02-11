@@ -6,3 +6,16 @@
 /build/
 .ipynb_checkpoints
 /extensions/jupyterlab/README.md
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.DS_Store
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+vv

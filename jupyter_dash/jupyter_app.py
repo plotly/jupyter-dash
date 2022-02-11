@@ -228,7 +228,10 @@ class JupyterDash(dash.Dash):
             requests_pathname_prefix = requests_pathname_prefix.format(port=port)
         else:
             requests_pathname_prefix = '/'
-        self.config.update({'requests_pathname_prefix': requests_pathname_prefix})
+        # low-level setter to circumvent Dash's config locking
+        # normally it's unsafe to alter requests_pathname_prefix this late, but
+        # Jupyter needs some unusual behavior.
+        dict.__setitem__(self.config, "requests_pathname_prefix", requests_pathname_prefix)
 
         # Compute server_url url
         if self.server_url is None:

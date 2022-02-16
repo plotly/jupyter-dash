@@ -67,7 +67,7 @@ Then install the JupyterLab extension in development mode:
 $ jupyter labextension link extensions/jupyterlab
 ```
 
-For release, build the JupyterLab extension to bundle with the Python package:
+For release, build the JupyterLab extension to bundle with the Python package (see [RELEASE.md](https://github.com/plotly/jupyter-dash/blob/master/RELEASE.md) for the full process):
 
 ```
 $ python setup.py build_js

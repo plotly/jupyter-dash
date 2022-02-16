@@ -17,13 +17,13 @@ build:
 
 requirements:
   host:
-    - python=3.7
+    - python>=3.7
     - pip
     - nodejs
-    - jupyterlab=2.0
+    - jupyterlab>=2.0
 
   run:
-    - python>=3.5
+    - python>=3.6
     {% for dep in sdata.get('install_requires',{}) %}
     - {{ dep }}
     {% endfor %}

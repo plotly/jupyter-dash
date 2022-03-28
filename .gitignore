@@ -19,3 +19,4 @@ ENV/
 env.bak/
 venv.bak/
 vv
+.vscode/settings.json

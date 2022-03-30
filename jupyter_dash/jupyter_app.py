@@ -9,6 +9,7 @@ import io
 import re
 import sys
 import inspect
+import traceback
 import warnings
 
 from IPython import get_ipython
@@ -20,27 +21,12 @@ import uuid
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
 
 
-def _get_skip(error: Exception, divider=2):
-
-    try:
-        # pylint: disable=import-outside-toplevel
-        from werkzeug.debug import tbtools
-    except ImportError:
-        tbtools = None
-
-    # werkzeug<2.1.0
-    if hasattr(tbtools, "get_current_traceback"):
-        tb = tbtools.get_current_traceback()
-        text = tb.plaintext.splitlines()
-
-    if hasattr(tbtools, "DebugTraceback"):
-        tb = tbtools.DebugTraceback(error)  # pylint: disable=no-member
-        text = tb.render_traceback_text().splitlines()
-    
+def _get_skip(error: Exception):
+    tb = traceback.format_exception(type(error), error, error.__traceback__)
     skip = 0
     for i, line in enumerate(text):
         if "%% callback invoked %%" in line:
-            skip = int((i + 1) / divider)
+            skip = i + 1
             break
     return skip
 

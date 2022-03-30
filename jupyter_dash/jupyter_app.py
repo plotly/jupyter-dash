@@ -9,6 +9,7 @@ import io
 import re
 import sys
 import inspect
+import traceback
 import warnings
 
 from IPython import get_ipython
@@ -17,10 +18,17 @@ from IPython.core.ultratb import FormattedTB
 from ansi2html import Ansi2HTMLConverter
 import uuid
 
-
-from werkzeug.debug.tbtools import get_current_traceback
-
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
+
+
+def _get_skip(error: Exception):
+    tb = traceback.format_exception(type(error), error, error.__traceback__)
+    skip = 0
+    for i, line in enumerate(text):
+        if "%% callback invoked %%" in line:
+            skip = i + 1
+            break
+    return skip
 
 
 class JupyterDash(dash.Dash):
@@ -356,18 +364,12 @@ class JupyterDash(dash.Dash):
     ):
 
         @self.server.errorhandler(Exception)
-        def _wrap_errors(_):
+        def _wrap_errors(error):
             """Install traceback handling for callbacks"""
             self._traceback = sys.exc_info()[2]
 
             # Compute number of stack frames to skip to get down to callback
-            tb_werkzeug = get_current_traceback()
-            skip = 0
-            if dev_tools_prune_errors:
-                for i, line in enumerate(tb_werkzeug.plaintext.splitlines()):
-                    if "%% callback invoked %%" in line:
-                        skip = int((i + 1) / 2)
-                        break
+            skip = _get_skip(error) if dev_tools_prune_errors else 0
 
             # Customized formatargvalues function so we can place function parameters
             # on separate lines

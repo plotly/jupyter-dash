@@ -23,7 +23,7 @@ from ._stoppable_thread import StoppableThread
 def _get_skip(error: Exception):
     tb = traceback.format_exception(type(error), error, error.__traceback__)
     skip = 0
-    for i, line in enumerate(text):
+    for i, line in enumerate(tb):
         if "%% callback invoked %%" in line:
             skip = i + 1
             break

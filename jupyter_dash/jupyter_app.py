@@ -1,9 +1,7 @@
 import dash
 import os
 import requests
-from flask import request
 import flask.cli
-from threading import Thread
 from retrying import retry
 import io
 import re
@@ -19,12 +17,13 @@ from ansi2html import Ansi2HTMLConverter
 import uuid
 
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
+from ._stoppable_thread import StoppableThread
 
 
 def _get_skip(error: Exception):
     tb = traceback.format_exception(type(error), error, error.__traceback__)
     skip = 0
-    for i, line in enumerate(text):
+    for i, line in enumerate(tb):
         if "%% callback invoked %%" in line:
             skip = i + 1
             break
@@ -48,6 +47,8 @@ class JupyterDash(dash.Dash):
     _in_ipython = get_ipython() is not None
     _in_colab = "google.colab" in sys.modules
     _token = str(uuid.uuid4())
+
+    _server_threads = {}
 
     @classmethod
     def infer_jupyter_proxy_config(cls):
@@ -138,15 +139,6 @@ class JupyterDash(dash.Dash):
 
         self.server_url = server_url
 
-        # Register route to shut down server
-        @self.server.route('/_shutdown_' + JupyterDash._token, methods=['GET'])
-        def shutdown():
-            func = request.environ.get('werkzeug.server.shutdown')
-            if func is None:
-                raise RuntimeError('Not running with the Werkzeug Server')
-            func()
-            return 'Server shutting down...'
-
         # Register route that we can use to poll to see when server is running
         @self.server.route('/_alive_' + JupyterDash._token, methods=['GET'])
         def alive():
@@ -225,7 +217,9 @@ class JupyterDash(dash.Dash):
             inline_exceptions = mode == "inline"
 
         # Terminate any existing server using this port
-        self._terminate_server_for_port(host, port)
+        old_server = self._server_threads.get((host, port))
+        if old_server:
+            old_server.kill()
 
         # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)
@@ -297,11 +291,16 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def run():
-            super_run_server(**kwargs)
+            try:
+                super_run_server(**kwargs)
+            except SystemExit:
+                pass
 
-        thread = Thread(target=run)
+        thread = StoppableThread(target=run)
         thread.setDaemon(True)
         thread.start()
+
+        self._server_threads[(host, port)] = thread
 
         # Wait for server to start up
         alive_url = "http://{host}:{port}/_alive_{token}".format(
@@ -413,16 +412,6 @@ class JupyterDash(dash.Dash):
             html_str = re.sub("background-color:[^;]+;", "", html_str)
 
             return html_str, 500
-
-    @classmethod
-    def _terminate_server_for_port(cls, host, port):
-        shutdown_url = "http://{host}:{port}/_shutdown_{token}".format(
-            host=host, port=port, token=JupyterDash._token
-        )
-        try:
-            response = requests.get(shutdown_url)
-        except Exception as e:
-            pass
 
 
 def _custom_formatargvalues(

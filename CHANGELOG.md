@@ -2,6 +2,10 @@
 All notable changes to `jupyter-dash` will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Fixed
+  - Fixed `werkzeug` 2.1.0 import and `skip` calculation
+
 ## 0.4.1 - 2022-02-16
 ### Fixed
  - Support Dash 2.1, fix `AttributeError: Read-only... requests_pathname_prefix`

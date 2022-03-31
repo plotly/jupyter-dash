@@ -1,5 +1,7 @@
+import asyncio
 import IPython
 from ipykernel.comm import Comm
+import nest_asyncio
 import time
 import sys
 
@@ -66,7 +68,12 @@ def _request_jupyter_config(timeout=2):
         if _jupyter_comm_response_received():
             break
 
-        kernel.do_one_iteration()
+        if asyncio.iscoroutinefunction(kernel.do_one_iteration):
+            nest_asyncio.apply()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(kernel.do_one_iteration())
+        else:
+            kernel.do_one_iteration()
 
     # Stop capturing events, revert the kernel shell handler to the default
     # execute_request behavior

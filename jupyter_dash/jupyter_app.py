@@ -220,6 +220,8 @@ class JupyterDash(dash.Dash):
         old_server = self._server_threads.get((host, port))
         if old_server:
             old_server.kill()
+            old_server.join()
+            del self._server_threads[(host, port)]
 
         # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)

@@ -5,3 +5,4 @@ retrying
 ipython
 ipykernel
 ansi2html
+nest-asyncio

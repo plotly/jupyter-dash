@@ -287,6 +287,14 @@ class JupyterDash(dash.Dash):
             inline_exceptions=inline_exceptions,
         )
 
+        # prevent partial import of orjson when it's installed and mode=jupyterlab
+        # TODO: why do we need this? Why only in this mode? Importing here in
+        # all modes anyway, in case there's a way it can pop up in another mode
+        try:
+            import orjson
+        except ImportError:
+            pass
+
         @retry(
             stop_max_attempt_number=15,
             wait_exponential_multiplier=100,

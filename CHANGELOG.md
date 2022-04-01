@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ### Fixed
   - Fixed `werkzeug` 2.1.0 import and `skip` calculation, shutdown deprecation warning.
+  - Work around a partial import of `orjson` when it's installed and you use `mode="jupyterlab"`
 
 ## 0.4.1 - 2022-02-16
 ### Fixed

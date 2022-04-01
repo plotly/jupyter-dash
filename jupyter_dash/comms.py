@@ -9,12 +9,15 @@ _jupyter_config = {}
 
 _dash_comm = Comm(target_name='jupyter_dash')
 
+_caller = {}
+
 
 def _send_jupyter_config_comm_request():
     # If running in an ipython kernel,
     # request that the front end extension send us the notebook server base URL
     if IPython.get_ipython() is not None:
         if _dash_comm.kernel is not None:
+            _caller["parent"] = _dash_comm.kernel.get_parent()
             _dash_comm.send({
                 'type': 'base_url_request'
             })
@@ -22,6 +25,11 @@ def _send_jupyter_config_comm_request():
 
 @_dash_comm.on_msg
 def _receive_message(msg):
+    prev_parent = _caller.get("parent")
+    if prev_parent and prev_parent != _dash_comm.kernel.get_parent():
+        _dash_comm.kernel.set_parent([prev_parent["header"]["session"]], prev_parent)
+        del _caller["parent"]
+
     msg_data = msg.get('content').get('data')
     msg_type = msg_data.get('type', None)
     if msg_type == 'base_url_response':
@@ -69,8 +77,8 @@ def _request_jupyter_config(timeout=2):
             break
 
         if asyncio.iscoroutinefunction(kernel.do_one_iteration):
-            nest_asyncio.apply()
             loop = asyncio.get_event_loop()
+            nest_asyncio.apply(loop)
             loop.run_until_complete(kernel.do_one_iteration())
         else:
             kernel.do_one_iteration()

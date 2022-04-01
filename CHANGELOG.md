@@ -2,10 +2,11 @@
 All notable changes to `jupyter-dash` will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 0.4.2 - 2022-03-31
 ### Fixed
   - Fixed `werkzeug` 2.1.0 import and `skip` calculation, shutdown deprecation warning.
   - Work around a partial import of `orjson` when it's installed and you use `mode="jupyterlab"`
+  - Fix `infer_jupyter_proxy_config` for newer jupyterlab versions
 
 ## 0.4.1 - 2022-02-16
 ### Fixed

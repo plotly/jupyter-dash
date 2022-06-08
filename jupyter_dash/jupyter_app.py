@@ -146,7 +146,7 @@ class JupyterDash(dash.Dash):
 
         self.server.logger.disabled = True
 
-    def run_server(
+    def run(
             self,
             mode=None, width="100%", height=650, inline_exceptions=None,
             **kwargs
@@ -173,7 +173,10 @@ class JupyterDash(dash.Dash):
             ``Dash.run_server`` method.
         """
         # Get superclass run_server method
-        super_run_server = super(JupyterDash, self).run_server
+        if hasattr(dash.Dash, "run"):
+            super_run_server = super(JupyterDash, self).run
+        else:
+            super_run_server = super(JupyterDash, self).run_server
 
         if not JupyterDash._in_ipython:
             # If not in IPython context, call run run_server synchronously
@@ -422,6 +425,16 @@ class JupyterDash(dash.Dash):
             html_str = re.sub("background-color:[^;]+;", "", html_str)
 
             return html_str, 500
+
+    def run_server(
+            self,
+            mode=None, width="100%", height=650, inline_exceptions=None,
+            **kwargs
+    ):
+        self.run(
+            mode=mode, width=width, height=height, inline_exceptions=inline_exceptions,
+            **kwargs
+        )
 
 
 def _custom_formatargvalues(

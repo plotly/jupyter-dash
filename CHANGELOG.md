@@ -2,6 +2,11 @@
 All notable changes to `jupyter-dash` will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [UNRELEASED]
+### Added
+
+- Support for `Dash.run` method added in Dash 2.4.0
+
 ## 0.4.2 - 2022-03-31
 ### Fixed
   - Fixed `werkzeug` 2.1.0 import and `skip` calculation, shutdown deprecation warning.

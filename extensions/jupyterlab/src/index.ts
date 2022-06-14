@@ -22,11 +22,16 @@ class DashIFrameWidget extends Widget {
   /**
    * Construct a new DashIFrameWidget.
    */
-  constructor(port: string, url: string) {
+  constructor(port: string, url: string, title: string) {
     super();
 
     this.id = port;
-    this.title.label = `Dash (port: ${port})`;
+    if(title === "") {
+      this.title.label = `Dash (port: ${port})`;
+    } else {
+      this.title.label = title;
+    }
+
     this.title.closable = true;
     this.addClass('jp-dashWidget');
 
@@ -62,6 +67,7 @@ interface DashMessageData {
   type: string;
   port: string;
   url: string;
+  title: string;
 }
 
 function activate(
@@ -110,13 +116,17 @@ function registerCommTarget(
           let widget: DashIFrameWidget;
           if (!widgets.has(msgData.port)) {
             // Create a new widget
-            widget = new DashIFrameWidget(msgData.port, msgData.url);
+            widget = new DashIFrameWidget(msgData.port, msgData.url, msgData.title);
             widget.update();
             widgets.set(msgData.port, widget);
 
             // Add instance tracker stuff
           } else {
             widget = widgets.get(msgData.port);
+          }
+
+          if(msgData.title !== "") {
+            widget.title.label = msgData.title
           }
 
           if (!widget.isAttached) {

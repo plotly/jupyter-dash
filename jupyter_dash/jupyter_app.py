@@ -149,6 +149,7 @@ class JupyterDash(dash.Dash):
     def run(
             self,
             mode=None, width="100%", height=650, inline_exceptions=None,
+            jupyterlab_title="",
             **kwargs
     ):
         """
@@ -344,7 +345,8 @@ class JupyterDash(dash.Dash):
         if JupyterDash._in_colab:
             self._display_in_colab(dashboard_url, port, mode, width, height)
         else:
-            self._display_in_jupyter(dashboard_url, port, mode, width, height)
+            self._display_in_jupyter(dashboard_url, port, mode, width, height,
+                                     jupyterlab_title)
 
     def _display_in_colab(self, dashboard_url, port, mode, width, height):
         from google.colab import output
@@ -355,7 +357,8 @@ class JupyterDash(dash.Dash):
             print("Dash app running on:")
             output.serve_kernel_port_as_window(port, anchor_text=dashboard_url)
 
-    def _display_in_jupyter(self, dashboard_url, port, mode, width, height):
+    def _display_in_jupyter(self, dashboard_url, port, mode, width, height,
+                            jupyterlab_title=''):
         if mode == 'inline':
             display(IFrame(dashboard_url, width, height))
         elif mode == 'external':
@@ -369,6 +372,7 @@ class JupyterDash(dash.Dash):
                 'type': 'show',
                 'port': port,
                 'url': dashboard_url,
+                'title': jupyterlab_title,
             })
 
     def _config_callback_exception_handling(

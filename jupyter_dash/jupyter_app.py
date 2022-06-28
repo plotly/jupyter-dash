@@ -314,6 +314,7 @@ class JupyterDash(dash.Dash):
                 pass
             except Exception as error:
                 err_q.put(error)
+                raise error
 
         thread = StoppableThread(target=run)
         thread.setDaemon(True)
@@ -326,6 +327,14 @@ class JupyterDash(dash.Dash):
             host=host, port=port, token=JupyterDash._token
         )
 
+        def _get_error():
+            try:
+                err = err_q.get_nowait()
+                if err:
+                    raise err
+            except queue.Empty:
+                pass
+
         # Wait for app to respond to _alive endpoint
         @retry(
             stop_max_attempt_number=15,
@@ -333,27 +342,26 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def wait_for_app():
+            _get_error()
             try:
-                err = err_q.get_nowait()
-                if err:
-                    raise err
-            except queue.Empty:
-                pass
-            req = requests.get(alive_url)
-            res = req.content.decode()
-            if req.status_code == 500:
-                raise Exception(res)
+                req = requests.get(alive_url)
+                res = req.content.decode()
+                if req.status_code != 200:
+                    raise Exception(res)
 
-            if res != "Alive":
-                url = "http://{host}:{port}".format(
-                    host=host, port=port, token=JupyterDash._token
-                )
-                raise OSError(
-                    "Address '{url}' already in use.\n"
-                    "    Try passing a different port to run_server.".format(
-                        url=url
+                if res != "Alive":
+                    url = "http://{host}:{port}".format(
+                        host=host, port=port, token=JupyterDash._token
                     )
-                )
+                    raise OSError(
+                        "Address '{url}' already in use.\n"
+                        "    Try passing a different port to run_server.".format(
+                            url=url
+                        )
+                    )
+            except requests.ConnectionError as err:
+                _get_error()
+                raise err
 
         try:
             wait_for_app()
@@ -363,7 +371,7 @@ class JupyterDash(dash.Dash):
             else:
                 self._display_in_jupyter(dashboard_url, port, mode, width, height)
         except Exception as final_error:
-            msg = final_error.args[0]
+            msg = str(final_error)
             if msg.startswith('<!'):
                 display(HTML(msg))
             else:

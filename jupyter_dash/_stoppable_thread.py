@@ -12,11 +12,12 @@ class StoppableThread(threading.Thread):
 
     def kill(self):
         thread_id = self.get_id()
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-            ctypes.c_long(thread_id), ctypes.py_object(SystemExit)
-        )
-        if res == 0:
-            raise ValueError(f"Invalid thread id: {thread_id}")
-        if res > 1:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), None)
-            raise SystemExit("Stopping thread failure")
+        if thread_id:
+            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                ctypes.c_long(thread_id), ctypes.py_object(SystemExit)
+            )
+            if res == 0:
+                raise ValueError(f"Invalid thread id: {thread_id}")
+            if res > 1:
+                ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), None)
+                raise SystemExit("Stopping thread failure")

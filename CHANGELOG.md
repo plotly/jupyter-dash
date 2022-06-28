@@ -3,6 +3,9 @@ All notable changes to `jupyter-dash` will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [UNRELEASED]
+### Fixed
+- Propagate start error message. [#94](https://github.com/plotly/jupyter-dash/pull/94)
+
 ### Added
 
 - Support for `Dash.run` method added in Dash 2.4.0

@@ -2,6 +2,7 @@ import dash
 import os
 import requests
 import flask.cli
+from IPython.core.display import HTML
 from retrying import retry
 import io
 import re
@@ -9,6 +10,7 @@ import sys
 import inspect
 import traceback
 import warnings
+import queue
 
 from IPython import get_ipython
 from IPython.display import IFrame, display
@@ -298,6 +300,8 @@ class JupyterDash(dash.Dash):
         except ImportError:
             pass
 
+        err_q = queue.Queue()
+
         @retry(
             stop_max_attempt_number=15,
             wait_exponential_multiplier=100,
@@ -308,6 +312,8 @@ class JupyterDash(dash.Dash):
                 super_run_server(**kwargs)
             except SystemExit:
                 pass
+            except Exception as error:
+                err_q.put(error)
 
         thread = StoppableThread(target=run)
         thread.setDaemon(True)
@@ -327,7 +333,17 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def wait_for_app():
-            res = requests.get(alive_url).content.decode()
+            try:
+                err = err_q.get_nowait()
+                if err:
+                    raise err
+            except queue.Empty:
+                pass
+            req = requests.get(alive_url)
+            res = req.content.decode()
+            if req.status_code == 500:
+                raise Exception(res)
+
             if res != "Alive":
                 url = "http://{host}:{port}".format(
                     host=host, port=port, token=JupyterDash._token
@@ -339,12 +355,19 @@ class JupyterDash(dash.Dash):
                     )
                 )
 
-        wait_for_app()
+        try:
+            wait_for_app()
 
-        if JupyterDash._in_colab:
-            self._display_in_colab(dashboard_url, port, mode, width, height)
-        else:
-            self._display_in_jupyter(dashboard_url, port, mode, width, height)
+            if JupyterDash._in_colab:
+                self._display_in_colab(dashboard_url, port, mode, width, height)
+            else:
+                self._display_in_jupyter(dashboard_url, port, mode, width, height)
+        except Exception as final_error:
+            msg = final_error.args[0]
+            if msg.startswith('<!'):
+                display(HTML(msg))
+            else:
+                raise final_error
 
     def _display_in_colab(self, dashboard_url, port, mode, width, height):
         from google.colab import output

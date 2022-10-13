@@ -1,3 +1,5 @@
+import multiprocessing
+
 import dash
 import os
 import requests
@@ -10,7 +12,6 @@ import sys
 import inspect
 import traceback
 import warnings
-import queue
 
 from IPython import get_ipython
 from IPython.display import IFrame, display
@@ -19,7 +20,6 @@ from ansi2html import Ansi2HTMLConverter
 import uuid
 
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
-from ._stoppable_thread import StoppableThread
 
 
 def _get_skip(error: Exception):
@@ -30,6 +30,28 @@ def _get_skip(error: Exception):
             skip = i + 1
             break
     return skip
+
+
+class Process(multiprocessing.Process):
+    def __init__(self, *args, **kwargs):
+        multiprocessing.Process.__init__(self, *args, **kwargs)
+        self._pconn, self._cconn = multiprocessing.Pipe()
+        self._exception = None
+
+    def run(self):
+        try:
+            multiprocessing.Process.run(self)
+            self._cconn.send(None)
+        except Exception as err:
+            tb = traceback.format_exc()
+            self._cconn.send((err, tb))
+            raise err
+
+    @property
+    def exception(self):
+        if self._pconn.poll():
+            self._exception = self._pconn.recv()
+        return self._exception
 
 
 class JupyterDash(dash.Dash):
@@ -50,7 +72,7 @@ class JupyterDash(dash.Dash):
     _in_colab = "google.colab" in sys.modules
     _token = str(uuid.uuid4())
 
-    _server_threads = {}
+    _server_processes = {}
 
     @classmethod
     def infer_jupyter_proxy_config(cls):
@@ -222,11 +244,11 @@ class JupyterDash(dash.Dash):
             inline_exceptions = mode == "inline"
 
         # Terminate any existing server using this port
-        old_server = self._server_threads.get((host, port))
+        old_server = self._server_processes.get((host, port))
         if old_server:
-            old_server.kill()
+            old_server.terminate()
             old_server.join()
-            del self._server_threads[(host, port)]
+            del self._server_processes[(host, port)]
 
         # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)
@@ -300,40 +322,24 @@ class JupyterDash(dash.Dash):
         except ImportError:
             pass
 
-        err_q = queue.Queue()
-
         @retry(
             stop_max_attempt_number=15,
             wait_exponential_multiplier=100,
             wait_exponential_max=1000
         )
         def run():
-            try:
-                super_run_server(**kwargs)
-            except SystemExit:
-                pass
-            except Exception as error:
-                err_q.put(error)
-                raise error
+            super_run_server(**kwargs)
 
-        thread = StoppableThread(target=run)
-        thread.setDaemon(True)
-        thread.start()
+        server_process = Process(target=run)
+        server_process.daemon = True
+        server_process.start()
 
-        self._server_threads[(host, port)] = thread
+        self._server_processes[(host, port)] = server_process
 
         # Wait for server to start up
         alive_url = "http://{host}:{port}/_alive_{token}".format(
             host=host, port=port, token=JupyterDash._token
         )
-
-        def _get_error():
-            try:
-                err = err_q.get_nowait()
-                if err:
-                    raise err
-            except queue.Empty:
-                pass
 
         # Wait for app to respond to _alive endpoint
         @retry(
@@ -342,26 +348,25 @@ class JupyterDash(dash.Dash):
             wait_exponential_max=1000
         )
         def wait_for_app():
-            _get_error()
-            try:
-                req = requests.get(alive_url)
-                res = req.content.decode()
-                if req.status_code != 200:
-                    raise Exception(res)
+            if server_process.exception:
+                exc, tb = server_process.exception
+                raise OSError(f"{exc}\n{tb}")
 
-                if res != "Alive":
-                    url = "http://{host}:{port}".format(
-                        host=host, port=port, token=JupyterDash._token
+            req = requests.get(alive_url)
+            res = req.content.decode()
+            if req.status_code != 200:
+                raise Exception(res)
+
+            if res != "Alive":
+                url = "http://{host}:{port}".format(
+                    host=host, port=port, token=JupyterDash._token
+                )
+                raise OSError(
+                    "Address '{url}' already in use.\n"
+                    "    Try passing a different port to run_server.".format(
+                        url=url
                     )
-                    raise OSError(
-                        "Address '{url}' already in use.\n"
-                        "    Try passing a different port to run_server.".format(
-                            url=url
-                        )
-                    )
-            except requests.ConnectionError as err:
-                _get_error()
-                raise err
+                )
 
         try:
             wait_for_app()

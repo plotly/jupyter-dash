@@ -3,6 +3,6 @@ requests
 flask
 retrying
 ipython
-ipykernel
+ipykernel>=6.0.0
 ansi2html
 nest-asyncio

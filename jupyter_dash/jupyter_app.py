@@ -1,3 +1,5 @@
+import logging
+
 import dash
 import os
 import requests
@@ -9,6 +11,7 @@ import re
 import sys
 import inspect
 import traceback
+import threading
 import warnings
 import queue
 
@@ -18,8 +21,9 @@ from IPython.core.ultratb import FormattedTB
 from ansi2html import Ansi2HTMLConverter
 import uuid
 
+from werkzeug.serving import make_server
+
 from .comms import _dash_comm, _jupyter_config, _request_jupyter_config
-from ._stoppable_thread import StoppableThread
 
 
 def _get_skip(error: Exception):
@@ -50,7 +54,7 @@ class JupyterDash(dash.Dash):
     _in_colab = "google.colab" in sys.modules
     _token = str(uuid.uuid4())
 
-    _server_threads = {}
+    _servers = {}
 
     @classmethod
     def infer_jupyter_proxy_config(cls):
@@ -147,6 +151,7 @@ class JupyterDash(dash.Dash):
             return 'Alive'
 
         self.server.logger.disabled = True
+        self._exception_handling_added = False
 
     def run(
             self,
@@ -186,11 +191,8 @@ class JupyterDash(dash.Dash):
             return
 
         # Get host and port
-        host = kwargs.get("host", os.getenv("HOST", "127.0.0.1"))
-        port = kwargs.get("port", os.getenv("PORT", "8050"))
-
-        kwargs['host'] = host
-        kwargs['port'] = port
+        host = kwargs.pop("host", os.getenv("HOST", "127.0.0.1"))
+        port = kwargs.pop("port", os.getenv("PORT", "8050"))
 
         # Validate / infer display mode
         if JupyterDash._in_colab:
@@ -222,11 +224,10 @@ class JupyterDash(dash.Dash):
             inline_exceptions = mode == "inline"
 
         # Terminate any existing server using this port
-        old_server = self._server_threads.get((host, port))
+        old_server = self._servers.get((host, port))
         if old_server:
-            old_server.kill()
-            old_server.join()
-            del self._server_threads[(host, port)]
+            old_server.shutdown()
+            del self._servers[(host, port)]
 
         # Configure pathname prefix
         requests_pathname_prefix = self.config.get('requests_pathname_prefix', None)
@@ -302,6 +303,13 @@ class JupyterDash(dash.Dash):
 
         err_q = queue.Queue()
 
+        server = make_server(
+            host, port, self.server,
+            threaded=True,
+            processes=0
+        )
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
+
         @retry(
             stop_max_attempt_number=15,
             wait_exponential_multiplier=100,
@@ -309,18 +317,18 @@ class JupyterDash(dash.Dash):
         )
         def run():
             try:
-                super_run_server(**kwargs)
+                server.serve_forever()
             except SystemExit:
                 pass
             except Exception as error:
                 err_q.put(error)
                 raise error
 
-        thread = StoppableThread(target=run)
-        thread.setDaemon(True)
+        thread = threading.Thread(target=run)
+        thread.daemon = True
         thread.start()
 
-        self._server_threads[(host, port)] = thread
+        self._servers[(host, port)] = server
 
         # Wait for server to start up
         alive_url = "http://{host}:{port}/_alive_{token}".format(

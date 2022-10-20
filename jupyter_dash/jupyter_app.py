@@ -257,11 +257,7 @@ class JupyterDash(dash.Dash):
         )
 
         # Default the global "debug" flag to True
-        debug = kwargs.get('debug', True)
-
-        # Disable debug flag when calling superclass because it doesn't work
-        # in notebook
-        kwargs['debug'] = False
+        debug = kwargs.pop('debug', True)
 
         # Enable supported dev tools
         if debug:
@@ -284,14 +280,32 @@ class JupyterDash(dash.Dash):
                 # there is no active kernel.
                 kwargs['dev_tools_hot_reload'] = mode == "external"
 
-        # suppress warning banner printed to standard out
-        flask.cli.show_server_banner = lambda *args, **kwargs: None
-
         # Set up custom callback exception handling
         self._config_callback_exception_handling(
             dev_tools_prune_errors=kwargs.get('dev_tools_prune_errors', True),
             inline_exceptions=inline_exceptions,
         )
+
+        dev_tools_args = dict(
+            debug=debug,
+            dev_tools_ui=kwargs.pop("dev_tools_ui", None),
+            dev_tools_props_check=kwargs.pop("dev_tools_props_check", None),
+            dev_tools_serve_dev_bundles=kwargs.pop("dev_tools_serve_dev_bundles", None),
+            dev_tools_hot_reload=kwargs.pop("dev_tools_hot_reload", None),
+            dev_tools_hot_reload_interval=kwargs.pop("dev_tools_hot_reload_interval", None),
+            dev_tools_hot_reload_watch_interval=kwargs.pop("dev_tools_hot_reload_watch_interval", None),
+            dev_tools_hot_reload_max_retry=kwargs.pop("dev_tools_hot_reload_max_retry", None),
+            dev_tools_silence_routes_logging=kwargs.pop("dev_tools_silence_routes_logging", None),
+            dev_tools_prune_errors=kwargs.pop("dev_tools_prune_errors", None),
+        )
+
+        if len(kwargs):
+            raise Exception(f"Invalid keyword argument: {list(kwargs.keys())}")
+
+        self.enable_dev_tools(**dev_tools_args)
+
+        # suppress warning banner printed to standard out
+        flask.cli.show_server_banner = lambda *args, **kw: None
 
         # prevent partial import of orjson when it's installed and mode=jupyterlab
         # TODO: why do we need this? Why only in this mode? Importing here in

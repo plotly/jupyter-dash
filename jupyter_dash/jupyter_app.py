@@ -192,7 +192,7 @@ class JupyterDash(dash.Dash):
 
         # Get host and port
         host = kwargs.pop("host", os.getenv("HOST", "127.0.0.1"))
-        port = kwargs.pop("port", os.getenv("PORT", "8050"))
+        port = int(kwargs.pop("port", os.getenv("PORT", "8050")))
 
         # Validate / infer display mode
         if JupyterDash._in_colab:

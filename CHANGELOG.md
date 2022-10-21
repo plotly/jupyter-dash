@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [UNRELEASED]
 ### Fixed
 - Propagate start error message. [#94](https://github.com/plotly/jupyter-dash/pull/94)
+- Fix rerun server with newer flask/werkzeug. [#105](https://github.com/plotly/jupyter-dash/pull/105)
 
 ### Added
 

@@ -1,5 +1,5 @@
 -r ../requirements.txt
-notebook==6.0.3
+notebook==7.0.0
 jupyter_server_proxy
 pandas
 numpy

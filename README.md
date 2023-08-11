@@ -1,3 +1,11 @@
+## NOTICE: as of Dash v2.11, Jupyter support is built into the main Dash package.
+
+The `jupyter-dash` package is no longer necessary, all of its functionality has been merged into `dash`. See https://dash.plotly.com/dash-in-jupyter for usage details, and if you have any questions please join the discussion at https://community.plotly.com/
+
+The old readme is below for those still using the package, but `jupyter-dash` will not receive any further updates.
+
+---
+
 # Jupyter Dash
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/plotly/jupyter-dash/master?urlpath=tree/notebooks/getting_started.ipynb)
 

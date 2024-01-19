@@ -33,7 +33,7 @@
   "dependencies": {
     "@jupyterlab/application": "^2.0.0 || ^3.0.0",
     "@jupyterlab/notebook": "^2.0.0 || ^3.0.0",
-    "@jupyterlab/console": "^2.0.0 || ^3.0.0"
+    "@jupyterlab/console": "^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "devDependencies": {
     "prettier": "2.0.5",
